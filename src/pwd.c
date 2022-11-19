@@ -7,28 +7,25 @@ int pwdL (char *path);
 int pwdP (char *result);
 
 int main (int argc, char *argv[]){
-    printf("ERROR: Blabla \n");
     char *path;
     if (argc==1){
-        printf("ERROR: PWD \n");
         return pwdL(path);
     }
+    //Si on doit faire pwd retourne meme si les argument ne sont pas valide enlever cette ligne et l'autre signalé
     if (argc>2){
-        printf("ERROR: Too many parameters \n");
+        printf("-slash: too many arguments \n");
         return 1;
     }
 
     if ((argv[1]) && (!strcmp((argv[1]), "-L"))) {
 
-        printf("ERROR: L \n");
         return pwdL(path);
     }
     if ((argv[1]) && (!strcmp((argv[1]), "-P"))){
-        printf("ERROR: P \n");
-
         return pwdP(path);
     }
-    printf("ERROR: Argument not valid \n");
+    //Celle-ci
+    printf("-slash: invalid option \n");
     return 1;
 }
 
