@@ -1,26 +1,34 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 
+int pwdL (char *path);
+int pwdP (char *result);
 
 int main (int argc, char *argv[]){
+    printf("ERROR: Blabla \n");
     char *path;
+    if (argc==1){
+        printf("ERROR: PWD \n");
+        return pwdL(path);
+    }
     if (argc>2){
-        perror("ERROR: Too many parameters \n");
+        printf("ERROR: Too many parameters \n");
         return 1;
     }
-    if (argc=0){
+
+    if ((argv[1]) && (!strcmp((argv[1]), "-L"))) {
+
+        printf("ERROR: L \n");
         return pwdL(path);
     }
+    if ((argv[1]) && (!strcmp((argv[1]), "-P"))){
+        printf("ERROR: P \n");
 
-    if ((argv[1]!= NULL) && (strcmp(argv[1]), "-P")){
         return pwdP(path);
     }
-    if ((argv[1]!= NULL) && (strcmp(argv[1]), "-L")) {
-        return pwdL(path);
-    }
-
-    perror("ERROR: Argument not valid \n");
+    printf("ERROR: Argument not valid \n");
     return 1;
 }
 
