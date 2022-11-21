@@ -3,7 +3,11 @@
 #include <string.h>
 #include <readline/history.h>
 #include <readline/readline.h>
+#include <lexer.c>
+#include <exit.c>
 
+#define MAX_ARGS_NUMBER 4096
+#define MAX_ARGS_STRLEN 4096
 
 #define SIZE_PROMPT 30
 #define SIZE_VALRET 3
@@ -14,6 +18,20 @@
 #define BLUE "\001\033[34m\002"
 #define CYAN "\001\033[36m\002"
 #define BASIC "\001\033[00m\002"
+
+int getInput(char *input){
+    char *buffer;
+    if ((buffer = fgets(" ", MAX_ARGS_STRLEN, stdin))){
+        while (*buffer == ' ' || *buffer == '\t'){
+            buffer++;
+        }
+        if (strlen(buffer) != 0) {
+            strcpy(input, buffer);
+            return 1;
+        }
+    }
+    return 0;
+}
 
 static char *initialice_prompt() {
     int valret = 0;
@@ -39,13 +57,14 @@ static char *initialice_prompt() {
     return prompt;
 }
 
-int main() {
-    initialice_prompt();
-    //char *read = readline(prompt);
-    /*
-    while (read != NULL){
-        free(prompt);
-        add_history(read);
-    }*/
-}
+int main(){
+    char *input = (char *) malloc(MAX_ARGS_STRLEN);
+    while(1){
+        //prompt()
+        if(getInput(input)) continue;
+        lexer(input);
 
+    free(input);
+    return 0;
+    }
+}
