@@ -6,7 +6,7 @@
 int pwdL ();
 int pwdP ();
 
-int main(int argc, char *argv[]){
+int parser_pwd(int argc, char *argv[]){
     if (argc==1){
         return pwdL();
     }

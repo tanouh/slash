@@ -3,9 +3,13 @@
 #include <string.h>
 #include <readline/history.h>
 #include <readline/readline.h>
-#include "lexer.c"
-#include "exit.c"
-#include "token.c"
+
+#include "lexer.h"
+#include "cd.h"
+#include "exit.h"
+#include "token.h"
+#include "pwd.h"
+#include "parser.h"
 
 #define MAX_ARGS_NUMBER 4096
 #define MAX_ARGS_STRLEN 4096
