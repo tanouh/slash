@@ -1,10 +1,12 @@
 #ifndef PROJET_SY5_TOKEN_H
+
 #define PROJET_SY5_TOKEN_H
 
 enum tokenType{
     ARG,
     CMD,
     OPE,
+    PIPE,
     REDIRECT
 };
 

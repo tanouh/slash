@@ -7,25 +7,24 @@ int pwdL ();
 int pwdP ();
 
 int parser_pwd(int argc, char *argv[]){
-    if (argc==1){
-        return pwdL();
-    }
-    //Si on doit faire pwd retourne meme si les argument ne sont pas valide enlever cette ligne et l'autre signalé
-    if (argc>2){
-        printf("-slash: too many arguments \n");
-        return 1;
-    }
+	if (argc==1){
+	return pwdL();
+	}
+	//Si on doit faire pwd retourne meme si les argument ne sont pas valide enlever cette ligne et l'autre signalé
+	if (argc>2){
+		printf("-slash: too many arguments \n");
+		return 1;
+	}
 
-    if ((argv[1]) && (!strcmp((argv[1]), "-L"))) {
-
-        return pwdL();
-    }
-    if ((argv[1]) && (!strcmp((argv[1]), "-P"))){
-        return pwdP();
-    }
-    //Celle-ci
-    printf("-slash: invalid option \n");
-    return 1;
+	if ((argv[1]) && (!strcmp((argv[1]), "-L"))) {
+		return pwdL();
+	}
+	if ((argv[1]) && (!strcmp((argv[1]), "-P"))){
+		return pwdP();
+	}
+	//Celle-ci
+	printf("-slash: invalid option \n");
+	return 1;
 }
 
 int pwdP (){
