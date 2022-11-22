@@ -3,7 +3,7 @@
 #include <string.h>
 #include "token.h"
 
-int lexer(char *input){
+int lexer(char *input, struct tokenList *tokList){
     const char *delimiters = " \t";
     char *tmp = (char *) malloc(strlen(input));
     if (tmp == NULL){

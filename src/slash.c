@@ -5,7 +5,7 @@
 #include <readline/readline.h>
 #include "lexer.c"
 #include "exit.c"
-#include "token.h"
+#include "token.c"
 
 #define MAX_ARGS_NUMBER 4096
 #define MAX_ARGS_STRLEN 4096
@@ -36,30 +36,30 @@ int getInput(char *input) {
 
 static char *initialize_prompt() {
     int valret = 0;
-    char *valret_color = malloc(SIZE_COLOR * sizeof(*valret_color));
+    char *valret_color;
     if (valret) {
         valret_color = GREEN;
     } else {
         valret_color = RED;
     }
-    char *buff = malloc(( SIZE_VALRET +(SIZE_PROMPT) + 3 * SIZE_COLOR + 1) * sizeof(*buff));
+    char *string = malloc(( SIZE_VALRET +(SIZE_PROMPT) + 3 * SIZE_COLOR + 1) * sizeof(*string) +100);
 
-    if (buff == NULL) {
+    if (string == NULL) {
         valret = 1;
         return NULL;
     }
     char *pwd = getenv("PWD");
     if (strlen(pwd) + (SIZE_VALRET + 1) < SIZE_PROMPT) {
-        sprintf(buff, "[%s%d]%s%s%s$", valret_color, valret, CYAN, pwd, BASIC);
+        sprintf(string, "[%s%d]%s%s%s$", valret_color, valret, CYAN, pwd, BASIC);
     } else {
         char *reduction = pwd + strlen(pwd) + 8 - SIZE_PROMPT;
-        sprintf(buff, "[%s%d]%s%s%s%s$", valret_color, valret, CYAN, "...", reduction, BASIC);
+        sprintf(string, "[%s%d]%s%s%s%s$", valret_color, valret, CYAN, "...", reduction, BASIC);
     }
-    return buff;
+    return string;
 }
 
 int main() {
-    //initialize_prompt();
+    initialize_prompt();
     char *input = (char *) malloc(MAX_ARGS_STRLEN);
     if (input == NULL){
         perror("Echec de l'allocation de memoire a input\n");
@@ -69,10 +69,9 @@ int main() {
 
     while(1) {
         //prompt()
-        printf("prompt");
         if (getInput(input)) continue;
-        lexer(input, tokenList);
-        freeTokenList(tokenList);
+        lexer(input, tokList);
+        freeTokenList(tokList);
     }
 
     free(input);
