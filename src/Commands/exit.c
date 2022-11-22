@@ -3,5 +3,5 @@
 #include <string.h>
 
 void exit_slash(int status){
-    printf("Session closed");
+        printf("Session closed");
 }
