@@ -2,10 +2,10 @@
 #define PROJET_SY5_TOKEN_H
 
 enum tokenType{
-    arg,
-    cmd,
-    ope,
-    redirect
+    ARG,
+    CMD,
+    OPE,
+    REDIRECT
 };
 
 typedef struct token{
@@ -24,8 +24,8 @@ typedef struct tokenList{
 
 struct tokenList *makeTokenList();
 
-int makeToken (struct tokenList *tokList, char *name, enum tokenType tokType);
+int makeToken(struct tokenList *tokList, const char *name, enum tokenType tokType);
 
-void freeTokenList(struct tokenList *tokList);
+void clearTokenList(struct tokenList *tokList);
 
 #endif

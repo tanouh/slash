@@ -54,31 +54,29 @@ static char *initialize_prompt() {
     }
     char *pwd = getenv("PWD");
     if (strlen(pwd) + (SIZE_VALRET + 1) < SIZE_PROMPT) {
-        fprintf(stderr, "%s[%d]%s%s%s$ ", valret_color, valret, CYAN, pwd, BASIC);
+        sprintf(string, "%s[%d]%s%s%s$ ", valret_color, valret, CYAN, pwd, BASIC);
     } else {
         char *reduction = pwd + strlen(pwd) + 8 - SIZE_PROMPT;
-        fprintf(stderr, "%s[%d]%s%s%s%s$ ", valret_color, valret, CYAN, "...", reduction, BASIC);
+        sprintf(string, "%s[%d]%s%s%s%s$ ", valret_color, valret, CYAN, "...", reduction, BASIC);
     }
     return string;
 }
 
 int main() {
-    initialize_prompt();
-    char *input = (char *) malloc(MAX_ARGS_STRLEN);
-    if (input == NULL){
-        perror("Echec de l'allocation de memoire a input\n");
-        return 0;
+    char *prompt = initialize_prompt();
+    tokenList *tokList = makeTokenList();
+    rl_outstream = stderr;
+    char *buffer;
+    while ((buffer = readline(prompt)) != NULL){
+        add_history(buffer);
+        free(prompt);
+        lex(buffer, tokList);
+        clearTokenList(tokList);
+        prompt = initialize_prompt();
     }
-    struct tokenList *tokList = makeTokenList();
+    rl_clear_history();
 
-    while(1) {
-        //prompt()
-        if (getInput(input)) continue;
-        lexer(input, tokList);
-        freeTokenList(tokList);
-    }
-
-    free(input);
+    free(prompt);
     free(tokList);
 
     return 0;

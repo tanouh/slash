@@ -15,13 +15,13 @@ struct tokenList *makeTokenList(){
     return tokList;
 }
 
-int makeToken (struct tokenList *tokList, char *name, enum tokenType tokType){
+int makeToken (struct tokenList *tokList, const char *name, enum tokenType tokType){
     token *tok = malloc(sizeof (token));
     if (tok == NULL){
         perror("Echec de l'allocation de memoire a tok\n");
         return 0;
     }
-    tok->name = malloc(strlen(name)*sizeof(char));
+    tok->name = malloc((1 + strlen(name))*sizeof(char));
     if (tok->name == NULL){
         perror("Echec de l'allocation de memoire a tok->name");
         free(tok);
@@ -31,14 +31,21 @@ int makeToken (struct tokenList *tokList, char *name, enum tokenType tokType){
     tok->type = tokType;
     tok->precedent = tokList->last;
     tok->next = NULL;
-    tokList->last->next = tok;
+    if (tokList->first == NULL) {
+        tokList->first = tok;
+        tokList->last = tok;
+    }else{
+        tokList->last->next = tok;
+    }
     tokList->last = tok;
-    if (tokList->first == NULL) tokList->first = tok;
     tokList->len++;
     return 1;
 }
 
-void freeTokenList(struct tokenList *tokList) {
+//TODO: rendre la liste générique
+//ajouter void *, sizeof (elt), fonction utilitaire pour nettoyer facilement, deplacer le pointeur de k-fois la
+//de l'element
+void clearTokenList(struct tokenList *tokList) {
     while (tokList->first != NULL) {
         if (tokList->first->name != NULL) free(tokList->first->name);
         free(tokList->first);
