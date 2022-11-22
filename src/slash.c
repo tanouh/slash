@@ -5,10 +5,10 @@
 #include <readline/readline.h>
 
 #include "lexer.h"
-#include "cd.h"
-#include "exit.h"
+#include "Commands/cd.h"
+#include "Commands/exit.h"
 #include "token.h"
-#include "pwd.h"
+#include "Commands/pwd.h"
 #include "parser.h"
 
 #define MAX_ARGS_NUMBER 4096
