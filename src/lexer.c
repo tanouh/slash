@@ -24,7 +24,7 @@ int lex_one(char * value, tokenList * tokList)
 		default : 
 			type = ARG;
 	}
-	return maketoken(tokList,value,type);
+	return makeToken(tokList,value,type);
 }
 
 int lex_two(char * value, tokenList * tokList)
@@ -42,7 +42,7 @@ int lex_two(char * value, tokenList * tokList)
 			}
 			break;
 		case '2':
-			enum tokenType type = (value[1] == '>')? ARG : REDIRECT;
+			type = (value[1] == '>')? ARG : REDIRECT;
 			return makeToken(tokList, value, type);
 		default: 
 			type = ARG;
@@ -65,7 +65,7 @@ int lex_three(char * value, tokenList * tokList)
 				
 		}
 	}
-	return makeToken(tokList,value,type)
+	return makeToken(tokList,value,type);
 }
 
 struct tokenList *lex (char *input, tokenList *tokList){
@@ -103,7 +103,7 @@ struct tokenList *lex (char *input, tokenList *tokList){
 				val_ret = lex_three(tokenStr,tokList);
 				break;
 			default: 
-				tokList = maketoken(tokList,tokenStr,ARG);
+				val_ret = makeToken(tokList,tokenStr,ARG);
 				break;
 		}
 		if(val_ret == 0 ){
