@@ -3,48 +3,47 @@
 #include <stdlib.h>
 #include <string.h>
 
-int pwdL();
+#include "pwd.h"
 
-int pwdP();
-
-int parser_pwd(int argc, char *argv[]) {
-        if (argc == 1) {
-                return pwdL();
-        }
-        //Si on doit faire pwd retourne meme si les argument ne sont pas valide enlever cette ligne et l'autre signalé
-        if (argc > 2) {
-                printf("-slash: too many arguments \n");
-                return 1;
-        }
-
-        if ((argv[1]) && (!strcmp((argv[1]), "-L"))) {
-
-                return pwdL();
-        }
-        if ((argv[1]) && (!strcmp((argv[1]), "-P"))) {
-                return pwdP();
-        }
-        //Celle-ci
-        printf("-slash: invalid option \n");
+int parser_pwd(int argc, char *argv[], int fdout) {
+    if (argc == 1) {
+        return pwdL(fdout);
+    }
+    //Si on doit faire pwd retourne meme si les argument ne sont pas valide enlever cette ligne et l'autre signalé
+    if (argc > 2) {
+        write(STDERR_FILENO, "-slash: too many arguments \n", strlen("-slash: too many arguments \n"));
         return 1;
+    }
+
+    if ((argv[1]) && (!strcmp((argv[1]), "-L"))) {
+
+        return pwdL(fdout);
+    }
+    if ((argv[1]) && (!strcmp((argv[1]), "-P"))) {
+        return pwdP(fdout);
+    }
+    //Celle-ci
+    write(STDERR_FILENO, "-slash: invalid option \n", strlen("-slash: invalid option \n"));
+    return 1;
 }
 
-int pwdP() {
-        char path[256];
-        if (getcwd(path, sizeof(path)) == NULL) {
-                perror("Something goes wrong with getcwd \n");
-                return 1;
-        }
-        printf("%s \n", path);
-        return 0;
+int pwdP(int fdout) {
+    char path[256];
+    if (getcwd(path, sizeof(path)) == NULL) {
+        write(STDERR_FILENO, "Something goes wrong with getcwd\n", strlen("Something goes wrong with getcwd\n"));
+
+        return 1;
+    }
+    write(fdout, path, strlen(path) + 2);
+
+    return 0;
 }
 
-int pwdL() {
-        char *path = getenv("PWD");
-        if (path == NULL) {
-                perror("Something goes wrong with getenv \n");
-                return 1;
-        }
-        printf("%s \n", path);
-        return 0;
-}
+int pwdL(int fdout) {
+    char *path = getenv("PWD");
+    if (path == NULL) {
+        write(STDERR_FILENO, "Something goes wrong with getenv\n", strlen("Something goes wrong with getenv\n"));
+        return 1;
+    }
+    write(fdout, path, strlen(path) + 1);
+    return 0;
