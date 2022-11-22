@@ -22,7 +22,7 @@
 
 int getInput(char *input) {
     char *buffer;
-    if ((buffer = fgets(" ", MAX_ARGS_STRLEN, stdin))) {
+    if ((buffer = fgets("", MAX_ARGS_STRLEN, stdin))) {
         while (*buffer == ' ' || *buffer == '\t') {
             buffer++;
         }
@@ -42,7 +42,7 @@ static char *initialize_prompt() {
     } else {
         valret_color = RED;
     }
-    char *string = malloc(( SIZE_VALRET +(SIZE_PROMPT) + 3 * SIZE_COLOR + 1) * sizeof(*string) +100);
+    char *string = malloc(( (SIZE_VALRET) +(SIZE_PROMPT) + 3 * SIZE_COLOR + 1) * sizeof(*string));
 
     if (string == NULL) {
         valret = 1;
@@ -50,10 +50,10 @@ static char *initialize_prompt() {
     }
     char *pwd = getenv("PWD");
     if (strlen(pwd) + (SIZE_VALRET + 1) < SIZE_PROMPT) {
-        sprintf(string, "[%s%d]%s%s%s$", valret_color, valret, CYAN, pwd, BASIC);
+        printf("%s[%d]%s%s%s$", valret_color, valret, CYAN, pwd, BASIC);
     } else {
         char *reduction = pwd + strlen(pwd) + 8 - SIZE_PROMPT;
-        sprintf(string, "[%s%d]%s%s%s%s$", valret_color, valret, CYAN, "...", reduction, BASIC);
+        printf("%s[%d]%s%s%s%s$", valret_color, valret, CYAN, "...", reduction, BASIC);
     }
     return string;
 }
@@ -76,5 +76,6 @@ int main() {
 
     free(input);
     free(tokList);
+
     return 0;
 }
