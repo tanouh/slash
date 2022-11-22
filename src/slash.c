@@ -50,10 +50,10 @@ static char *initialize_prompt() {
     }
     char *pwd = getenv("PWD");
     if (strlen(pwd) + (SIZE_VALRET + 1) < SIZE_PROMPT) {
-        printf("%s[%d]%s%s%s$", valret_color, valret, CYAN, pwd, BASIC);
+        fprintf(stderr, "%s[%d]%s%s%s$ ", valret_color, valret, CYAN, pwd, BASIC);
     } else {
         char *reduction = pwd + strlen(pwd) + 8 - SIZE_PROMPT;
-        printf("%s[%d]%s%s%s%s$", valret_color, valret, CYAN, "...", reduction, BASIC);
+        fprintf(stderr, "%s[%d]%s%s%s%s$ ", valret_color, valret, CYAN, "...", reduction, BASIC);
     }
     return string;
 }
