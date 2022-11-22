@@ -1,10 +1,11 @@
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <readline/history.h>
 #include <readline/readline.h>
 #include "lexer.c"
 #include "exit.c"
+#include "token.h"
 
 #define MAX_ARGS_NUMBER 4096
 #define MAX_ARGS_STRLEN 4096
@@ -33,8 +34,7 @@ int getInput(char *input) {
     return 0;
 }
 
-
-static char *initialice_prompt() {
+static char *initialize_prompt() {
     int valret = 0;
     char *valret_color = malloc(SIZE_COLOR * sizeof(*valret_color));
     if (valret) {
@@ -59,15 +59,23 @@ static char *initialice_prompt() {
 }
 
 int main() {
-    //initialice_prompt();
+    //initialize_prompt();
     char *input = (char *) malloc(MAX_ARGS_STRLEN);
-
-    while (1) {
-
-        if (getInput(input)) continue;
-        lexer(input);
-
-        free(input);
+    if (input == NULL){
+        perror("Echec de l'allocation de memoire a input\n");
         return 0;
     }
+    struct tokenList *tokList = makeTokenList();
+
+    while(1) {
+        //prompt()
+        printf("prompt");
+        if (getInput(input)) continue;
+        lexer(input, tokenList);
+        freeTokenList(tokenList);
+    }
+
+    free(input);
+    free(tokList);
+    return 0;
 }

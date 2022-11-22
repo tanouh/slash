@@ -1,15 +1,19 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "token.h"
 
 int lexer(char *input){
     const char *delimiters = " \t";
-    char *tmp;
+    char *tmp = (char *) malloc(strlen(input));
+    if (tmp == NULL){
+        perror("Echec de l'allocation de memoire a tmp\n");
+    }
     strcpy(tmp, input);
-    char *tokens = strtok(tmp, delimiters);
-    while (tokens != NULL ) {
-        printf ( "%s\n", tokens );
-        tokens = strtok (NULL, delimiters);
+    char *tokenStr = strtok(tmp, delimiters);
+    while (tokenStr != NULL ) {
+        printf ( "%s\n", tokenStr );
+        tokenStr = strtok (NULL, delimiters);
     }
     return 1;
 }
