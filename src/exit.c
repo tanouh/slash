@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-void exit_slash(int status){
+int exit_slash(int argc, char *argv[]){
         printf("Session closed");
+        return 0;
 }

@@ -53,10 +53,19 @@ int main() {
         tokenList *tokList = makeTokenList();
         rl_outstream = stderr;
         char *buffer;
+        char **argCmd;
         while ((buffer = readline(prompt)) != NULL) {
                 add_history(buffer);
                 free(prompt);
-                lex(buffer, tokList);
+                tokList = lex(buffer, tokList);
+                argCmd = calloc(tokList->len+1,sizeof(char *));
+                if (argCmd == NULL){
+                        perror("Echec de l'allocation de memoire a argCmd");
+                        clearTokenList(tokList);
+                        break;
+                }
+                parser(tokList, argCmd);
+                free(argCmd);
                 clearTokenList(tokList);
                 prompt = initialize_prompt();
         }
@@ -64,6 +73,7 @@ int main() {
 
         free(prompt);
         free(tokList);
+        free(argCmd);
 
         return 0;
 }

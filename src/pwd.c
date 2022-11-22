@@ -5,9 +5,9 @@
 
 #include "pwd.h"
 
-int parser_pwd(int argc, char *argv[], int fdout) {
+int parser_pwd(int argc, char *argv[]) {
         if (argc == 1) {
-                return pwdL(fdout);
+                return pwdL(STDERR_FILENO);
         }
         //Si on doit faire pwd retourne meme si les argument ne sont pas valide enlever cette ligne et l'autre signalé
         if (argc > 2) {
@@ -17,10 +17,10 @@ int parser_pwd(int argc, char *argv[], int fdout) {
 
         if ((argv[1]) && (!strcmp((argv[1]), "-L"))) {
 
-                return pwdL(fdout);
+                return pwdL(STDERR_FILENO);
         }
         if ((argv[1]) && (!strcmp((argv[1]), "-P"))) {
-                return pwdP(fdout);
+                return pwdP(STDERR_FILENO);
         }
         //Celle-ci
         write(STDERR_FILENO, "-slash: invalid option \n", strlen("-slash: invalid option \n"));
