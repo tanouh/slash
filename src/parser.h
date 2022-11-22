@@ -1,0 +1,4 @@
+#ifndef PROJET_SY5_PARSER_H
+#define PROJET_SY5_PARSER_H
+
+#endif //PROJET_SY5_PARSER_H
