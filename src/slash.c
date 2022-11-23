@@ -1,15 +1,18 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include <readline/history.h>
 #include <readline/readline.h>
 
 #include "lexer.h"
+#include "token.h"
+#include "parser.h"
+#include "Commands/exit.h"
 #include "Commands/cd.h"
 #include "Commands/exit.h"
-#include "token.h"
 #include "Commands/pwd.h"
-#include "parser.h"
+
 
 #define MAX_ARGS_NUMBER 4096
 #define MAX_ARGS_STRLEN 4096
@@ -24,8 +27,11 @@
 #define CYAN "\001\033[36m\002"
 #define BASIC "\001\033[00m\002"
 
-static char *initialize_prompt() {
-        int valret = 0;
+int ret_val;
+char * prompt;
+struct tokenList *toklist;
+
+static char *initialize_prompt(int valret) {
         char *valret_color;
         if (valret) {
                 valret_color = GREEN;
@@ -48,22 +54,29 @@ static char *initialize_prompt() {
         return string;
 }
 
+
+
 int main() {
-        char *prompt = initialize_prompt();
-        tokenList *tokList = makeTokenList();
+	ret_val = 0;
+        prompt = initialize_prompt(ret_val);
+	toklist = makeTokenList();
         rl_outstream = stderr;
         char *buffer;
+	
         while ((buffer = readline(prompt)) != NULL) {
+
                 add_history(buffer);
                 free(prompt);
-                lex(buffer, tokList);
-                clearTokenList(tokList);
-                prompt = initialize_prompt();
+                toklist = lex(buffer, toklist);
+		ret_val = 0; // valeur renvoyée par le parser
+                prompt = initialize_prompt(ret_val);
+		clearTokenList(toklist);
+		fprintf(stderr,"%p\n",(void *) toklist->first);
         }
         rl_clear_history();
 
         free(prompt);
-        free(tokList);
+        free(toklist);
 
         return 0;
 }

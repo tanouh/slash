@@ -46,9 +46,12 @@ int makeToken(struct tokenList *tokList, const char *name, enum tokenType tokTyp
 //ajouter void *, sizeof (elt), fonction utilitaire pour nettoyer facilement, deplacer le pointeur de k-fois la
 //de l'element
 void clearTokenList(struct tokenList *tokList) {
+	token * tmp = tokList->first;
         while (tokList->first != NULL) {
-                if (tokList->first->name != NULL) free(tokList->first->name);
-                free(tokList->first);
-                tokList->first = tokList->first->next;
+                tmp = tokList->first->next;
+		if (tokList->first->name != NULL) free(tokList->first->name);
+		free(tokList->first);
+                tokList->first = tmp;
         }
+	tokList->len=0;
 }
