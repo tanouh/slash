@@ -15,11 +15,11 @@ static struct cmdFun tabFun[] = {
 };
 
 int parserAux(token *first, token *last, int len){
-        if (first == NULL) return 0;
+        if (first == NULL) return 1;
         char **argv = calloc(len+1,sizeof(char *));
         if (argv == NULL) {
                 perror("Erreur lors de l'allocation de argv");
-                return 0;
+                return 1;
         }
         int (*fun)(int, char**) = NULL;
         for (int i = 0; i < sizeof(tabFun)/sizeof(tabFun[0]); i++){
@@ -27,20 +27,20 @@ int parserAux(token *first, token *last, int len){
                        fun = tabFun[i].fun;
                 }
         }
-        int k = 0;
-        if (fun == NULL) return 0;
+        int k = 1;
+        if (fun == NULL) return 1;
         while (first != last && first->next != last){
                 first = first->next;
                 argv[k] = first->name;
         }
         argv[len-1] = last->name;
         fun(len, argv);
-        return 1;
+        return 0;
 }
 
 int parser(struct tokenList *tokList, char **argCmd){
         token *current = tokList->first;
-        if (current->type != CMD) return 0;
+        if (current->type != CMD) return 1;
         token *startCmd = tokList->first;
         int len = 0;
         while (current != NULL){
@@ -49,10 +49,10 @@ int parser(struct tokenList *tokList, char **argCmd){
                         *startCmd = *current;
                 }
                 if (current->next == NULL || current->next->type == CMD) {
-                        if (!parserAux(startCmd, current, len)) return 0;
+                        if (!parserAux(startCmd, current, len)) return 1;
                 }
                 current = current->next;
                 len++;
         }
-        return 1;
+        return 0;
 }
