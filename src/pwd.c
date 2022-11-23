@@ -6,11 +6,11 @@
 #include "pwd.h"
 
 int exec_pwd(int argc, char *argv[]) {
-        if (argc == 1) {
+        if (argc == 0) {
                 return pwdL(STDERR_FILENO);
         }
         //Si on doit faire pwd retourne meme si les argument ne sont pas valide enlever cette ligne et l'autre signalé
-        if (argc > 2) {
+        if (argc > 1) {
                 write(STDERR_FILENO, "-slash: too many arguments \n", strlen("-slash: too many arguments \n"));
                 return 1;
         }

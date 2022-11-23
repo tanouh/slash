@@ -31,7 +31,7 @@ struct tokenList *toklist;
 
 static char *initialize_prompt(int valret) {
         char *valret_color;
-        if (valret) {
+        if (valret == 0) {
                 valret_color = GREEN;
         } else {
                 valret_color = RED;
@@ -57,7 +57,7 @@ static char *initialize_prompt(int valret) {
 int main() {
         rl_outstream = stderr;
 	
-	ret_val = 1;
+	ret_val = 0;
         prompt = initialize_prompt(ret_val);
 	toklist = makeTokenList();
         
@@ -65,12 +65,11 @@ int main() {
         char **argCmd;
 
         while ((buffer = readline(prompt)) != NULL) {
-
                 add_history(buffer);
                 free(prompt);
-                ret_val = 1; // valeur renvoyée par le parser
+                ret_val = 0; // valeur renvoyée par le parser
 		toklist = lex(buffer, toklist);
-                argCmd = calloc(toklist->len+1,sizeof(char *));
+                argCmd = malloc(((toklist->len)+1)*sizeof(char *));
                 if (argCmd == NULL){
                         perror("Echec de l'allocation de memoire a argCmd");
                         clearTokenList(toklist);
@@ -86,6 +85,8 @@ int main() {
         free(prompt);
         free(toklist);
 
-	char *ret_val_s = itoa(ret_val, 10);
-	return exec_exit(1,&ret_val_s);
+	//char *ret_val_s = itoa(ret_val, 10);
+	write(STDERR_FILENO,"\n-slash terminate\n",20);
+	exit(ret_val);
+	// return exec_exit(1,NULL);
 }
