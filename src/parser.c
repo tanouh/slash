@@ -49,7 +49,7 @@ int parser(struct tokenList *tokList, char **argCmd){
                         *startCmd = *current;
                 }
                 if (current->next == NULL || current->next->type == CMD) {
-                        if (!parserAux(startCmd, current, len)) return 1;
+                        if (parserAux(startCmd, current, len)) return 1;
                 }
                 current = current->next;
                 len++;
