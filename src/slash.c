@@ -6,13 +6,11 @@
 #include <readline/readline.h>
 
 #include "lexer.h"
+#include "cd.h"
+#include "exit.h"
 #include "token.h"
+#include "pwd.h"
 #include "parser.h"
-#include "Commands/exit.h"
-#include "Commands/cd.h"
-#include "Commands/exit.h"
-#include "Commands/pwd.h"
-
 
 #define MAX_ARGS_NUMBER 4096
 #define MAX_ARGS_STRLEN 4096
@@ -62,21 +60,29 @@ int main() {
 	toklist = makeTokenList();
         rl_outstream = stderr;
         char *buffer;
-	
+        char **argCmd;
         while ((buffer = readline(prompt)) != NULL) {
 
                 add_history(buffer);
                 free(prompt);
-                toklist = lex(buffer, toklist);
-		ret_val = 0; // valeur renvoyée par le parser
+                ret_val = 0; // valeur renvoyée par le parser
+		toklist = lex(buffer, toklist);
+                argCmd = calloc(toklist->len+1,sizeof(char *));
+                if (argCmd == NULL){
+                        perror("Echec de l'allocation de memoire a argCmd");
+                        clearTokenList(toklist);
+                        break;
+                }
+                parser(toklist, argCmd);
+                free(argCmd);
+                clearTokenList(toklist);
                 prompt = initialize_prompt(ret_val);
-		clearTokenList(toklist);
-		fprintf(stderr,"%p\n",(void *) toklist->first);
         }
         rl_clear_history();
 
         free(prompt);
         free(toklist);
+        free(argCmd);
 
         return 0;
 }
