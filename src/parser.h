@@ -7,6 +7,8 @@ typedef struct cmdFun{
     int (*fun)(int, char**);
 }cmdFun;
 
-void parser(struct tokenList *tokList, char **argCmd);
+int parserAux(token *first, token *last, int len);
+
+int parser(struct tokenList *tokList, char **argCmd);
 
 #endif //PROJET_SY5_PARSER_H

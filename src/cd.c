@@ -9,7 +9,7 @@
 #include "cd.h"
 
 
-int parser_cd(int argc, char *argv[]) {
+int exec_cd(int argc, char *argv[]) {
     if (argc == 2) {
         return cd(argv[1]);
     }

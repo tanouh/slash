@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 #include <readline/history.h>
 #include <readline/readline.h>
 
@@ -24,10 +25,13 @@
 #define CYAN "\001\033[36m\002"
 #define BASIC "\001\033[00m\002"
 
-static char *initialize_prompt() {
-        int valret = 0;
+int ret_val;
+char * prompt;
+struct tokenList *toklist;
+
+static char *initialize_prompt(int valret) {
         char *valret_color;
-        if (valret) {
+        if (valret == 0) {
                 valret_color = GREEN;
         } else {
                 valret_color = RED;
@@ -48,32 +52,42 @@ static char *initialize_prompt() {
         return string;
 }
 
+
+
 int main() {
-        char *prompt = initialize_prompt();
-        tokenList *tokList = makeTokenList();
         rl_outstream = stderr;
-        char *buffer;
+	
+	ret_val = 0;
+        prompt = initialize_prompt(ret_val);
+	toklist = makeTokenList();
+        
+	char *buffer;
         char **argCmd;
+
         while ((buffer = readline(prompt)) != NULL) {
+                if (!strcmp(buffer, "")) continue;
                 add_history(buffer);
                 free(prompt);
-                tokList = lex(buffer, tokList);
-                argCmd = calloc(tokList->len+1,sizeof(char *));
+                ret_val = 0; // valeur renvoyée par le parser
+		toklist = lex(buffer, toklist);
+                argCmd = malloc((toklist->len+1)*sizeof(char *));
                 if (argCmd == NULL){
                         perror("Echec de l'allocation de memoire a argCmd");
-                        clearTokenList(tokList);
+                        clearTokenList(toklist);
                         break;
                 }
-                parser(tokList, argCmd);
+                parser(toklist, argCmd);
                 free(argCmd);
-                clearTokenList(tokList);
-                prompt = initialize_prompt();
+                clearTokenList(toklist);
+                prompt = initialize_prompt(ret_val);
         }
         rl_clear_history();
 
         free(prompt);
-        free(tokList);
-        free(argCmd);
+        free(toklist);
 
-        return 0;
+	//char *ret_val_s = itoa(ret_val, 10);
+	write(STDERR_FILENO,"\n-slash terminate\n",20);
+	exit(ret_val);
+	// return exec_exit(1,NULL);
 }
