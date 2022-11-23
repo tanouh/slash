@@ -62,12 +62,11 @@ int main() {
         char *buffer;
         char **argCmd;
         while ((buffer = readline(prompt)) != NULL) {
-
                 add_history(buffer);
                 free(prompt);
                 ret_val = 0; // valeur renvoyée par le parser
 		toklist = lex(buffer, toklist);
-                argCmd = calloc(toklist->len+1,sizeof(char *));
+                argCmd = malloc(((toklist->len)+1)*sizeof(char *));
                 if (argCmd == NULL){
                         perror("Echec de l'allocation de memoire a argCmd");
                         clearTokenList(toklist);
