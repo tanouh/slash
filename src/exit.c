@@ -32,7 +32,7 @@ int is_a_number(char * string, int s_len){
 }
 
 int exec_exit(int argc, char **argv){
-        if (argc > 1 || argc < 0 || (is_a_number(argv[0], strlen(argv[0])) == 0 )) {
+        if (argc > 1 || argc < 0 || (argc > 0 && is_a_number(argv[0], strlen(argv[0])) == 0 )) {
 		// write(STDERR_FILENO,"%d", argc);
 		write(STDERR_FILENO,EXIT_FAILED_MSG,EFM_LEN);
 		return 1;

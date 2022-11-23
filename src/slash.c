@@ -67,7 +67,6 @@ int main() {
         while ((buffer = readline(prompt)) != NULL) {
                 add_history(buffer);
                 free(prompt);
-                ret_val = 0; // valeur renvoyée par le parser
 		toklist = lex(buffer, toklist);
                 argCmd = malloc(((toklist->len)+1)*sizeof(char *));
                 if (argCmd == NULL){
@@ -75,7 +74,7 @@ int main() {
                         clearTokenList(toklist);
                         break;
                 }
-                parser(toklist, argCmd);
+                ret_val = parser(toklist, argCmd);
                 free(argCmd);
                 clearTokenList(toklist);
                 prompt = initialize_prompt(ret_val);
@@ -85,8 +84,6 @@ int main() {
         free(prompt);
         free(toklist);
 
-	//char *ret_val_s = itoa(ret_val, 10);
 	write(STDERR_FILENO,"\n-slash terminate\n",20);
 	exit(ret_val);
-	// return exec_exit(1,NULL);
 }
