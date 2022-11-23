@@ -10,27 +10,23 @@
 
 
 int exec_cd(int argc, char *argv[]) {
-    if (argc == 2) {
-        return cd(argv[1]);
+    if (argc == 1) {
+        return cd(argv[0]);
     }
-    if (argc > 4) {
+    if (argc > 2) {
         write(STDERR_FILENO, "-slash: too many arguments \n", strlen("-slash: too many arguments \n"));
         return 1;
     }
 
-    if (argc <= 1) {
-        write(STDERR_FILENO, "-slash: invalid option \n", strlen("-slash: invalid option \n"));
-        return 1;
-    }
 
-    if ((argv[1]) && (!strcmp((argv[1]), "-L"))) {
+    if ((argv[0]) && (!strcmp((argv[0]), "-L"))) {
 
-        return cd(argv[2]);
+        return cd(argv[1]);
     }
-    if ((argv[1]) && (!strcmp((argv[1]), "-P"))) {
-        return cd(argv[2]);
+    if ((argv[0]) && (!strcmp((argv[0]), "-P"))) {
+        return cd(argv[1]);
     }
-    write(STDERR_FILENO, "-slash: invalid option \n", strlen("-slash: invalid option \n"));
+    write(STDERR_FILENO, "-slash: invalid option1 \n", strlen("-slash: invalid option1 \n"));
 
     return 1;
 
@@ -98,6 +94,7 @@ char *clean(char *path) {
     size_t h = 0;
     for (size_t k = 0; k < res_size; k++) {
         if (result[k]) {
+            printf("%s\n",result[k]);
             size_t rs = strlen(result[k]);
             memset(res + h, '/', 1);
             memmove(res + h + 1, result[k], rs);
@@ -122,7 +119,7 @@ char **cut(char *path, size_t *size) {
     *size = i;
     char **pathv = malloc(sizeof(char *) * i);
 
-    int a = path[0] == '/';
+    int a = (path[0] == '/') ? 0: 1;
     int b = 0;
     for (size_t k = 0; k < path_s && b < i; k++) {
         if (path[k] == '/' && k) {
