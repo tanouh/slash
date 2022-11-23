@@ -7,9 +7,9 @@
 #include "parser.h"
 
 static struct cmdFun tab[] = {
-        { "cd", cd_slash },
-        { "pwd", parser_pwd },
-        { "exit", exit_slash },
+        { "cd", exec_cd },
+        { "pwd", exec_pwd },
+        { "exit", exec_exit },
 };
 
 void parser(struct tokenList *tokList, char **argCmd){

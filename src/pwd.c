@@ -5,7 +5,7 @@
 
 #include "pwd.h"
 
-int parser_pwd(int argc, char *argv[]) {
+int exec_pwd(int argc, char *argv[]) {
         if (argc == 1) {
                 return pwdL(STDERR_FILENO);
         }
