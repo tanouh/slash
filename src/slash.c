@@ -55,17 +55,20 @@ static char *initialize_prompt(int valret) {
 
 
 int main() {
-	ret_val = 0;
+        rl_outstream = stderr;
+	
+	ret_val = 1;
         prompt = initialize_prompt(ret_val);
 	toklist = makeTokenList();
-        rl_outstream = stderr;
-        char *buffer;
+        
+	char *buffer;
         char **argCmd;
+
         while ((buffer = readline(prompt)) != NULL) {
 
                 add_history(buffer);
                 free(prompt);
-                ret_val = 0; // valeur renvoyée par le parser
+                ret_val = 1; // valeur renvoyée par le parser
 		toklist = lex(buffer, toklist);
                 argCmd = calloc(toklist->len+1,sizeof(char *));
                 if (argCmd == NULL){
@@ -82,7 +85,7 @@ int main() {
 
         free(prompt);
         free(toklist);
-        free(argCmd);
 
-        return 0;
+	char *ret_val_s = itoa(ret_val, 10);
+	return exec_exit(1,&ret_val_s);
 }
