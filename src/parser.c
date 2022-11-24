@@ -35,8 +35,8 @@ int parserAux(token *first, token *last, int len){
 		k++;
         }
         argv[len-1] = last->name;
-        fun(len, argv);
-        return 0;
+        
+        return fun(len, argv);
 }
 
 int parser(struct tokenList *tokList, char **argCmd){

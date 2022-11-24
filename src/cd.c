@@ -67,7 +67,7 @@ int cd(char *path, int physical) {
                 buff = clean(path, envpath);
                 if (open(buff, O_RDONLY) != -1) {
                         strcpy(lastWd, envpath);
-                        if (setenv("PWD", buff, 1) == 0) {
+                        if (setenv("PWD", buff, 1) == 0)
                                 return 0;
                         }
                 }return cd(path, 1);

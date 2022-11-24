@@ -86,8 +86,6 @@ int main() {
         free(prompt);
         free(toklist);
 
-	//char *ret_val_s = itoa(ret_val, 10);
 	write(STDERR_FILENO,"\n-slash terminate\n",20);
 	exit(ret_val);
-	// return exec_exit(1,NULL);
 }
