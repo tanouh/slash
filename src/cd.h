@@ -13,4 +13,14 @@
  */
 int exec_cd(int argc, char **argv);
 
+int cd(char* path, int physical);
+
+char *clean (char *path, char *realpath);
+
+char **cut(char *path, size_t*);
+
+char *removeFirstSlash(char *path);
+
+char *addLastSlash(char *path);
+
 #endif //PROJET_SY5_CD_H

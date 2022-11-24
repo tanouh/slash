@@ -28,6 +28,7 @@
 int ret_val;
 char * prompt;
 struct tokenList *toklist;
+char *lastWd; // last working directory
 
 static char *initialize_prompt(int valret) {
         char *valret_color;
@@ -60,7 +61,7 @@ int main() {
 	ret_val = 0;
         prompt = initialize_prompt(ret_val);
 	toklist = makeTokenList();
-        
+        lastWd = getenv("PWD");
 	char *buffer;
         char **argCmd;
 
