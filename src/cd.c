@@ -68,7 +68,9 @@ char *clean(char *path) {
 
     char *pwd = getenv("PWD");
 
-
+    if (path[0]== '/'){
+        memset(pwd, 0x0, 1);
+    }
 
     int count = strlen(pwd) + strlen(path) + 2;
 
