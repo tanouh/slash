@@ -27,11 +27,12 @@ int parserAux(token *first, token *last, int len){
                        fun = tabFun[i].fun;
                 }
         }
-        int k = 1;
+        int k = 0;
         if (fun == NULL) return 1;
         while (first != last && first->next != last){
                 first = first->next;
                 argv[k] = first->name;
+		k++;
         }
         argv[len-1] = last->name;
         fun(len, argv);

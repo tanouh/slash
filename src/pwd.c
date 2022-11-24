@@ -27,26 +27,29 @@ int exec_pwd(int argc, char *argv[]) {
 }
 
 int pwdP(int fdout) {
-        char path[256];
-        if (getcwd(path, sizeof(path)) == NULL) {
+	char buff [PHYS_PATH_LEN];
+        char *path = realpath(getenv("PWD"),buff);
+        // if (getcwd(path, PHYS_PATH_LEN) == NULL) {
+	if( path == NULL){
                 write(STDERR_FILENO, "Something goes wrong with getcwd\n",
                       strlen("Something goes wrong with getcwd\n"));
 
                 return 0;
         }
-        write(fdout, path, strlen(path) + 1);
-        write(fdout, "\n", strlen("\n")+1);
+        write(fdout, path, strlen(path));
+        write(fdout, "\n", strlen("\n"));
         return 1;
 }
 
 int pwdL(int fdout) {
         char *path = getenv("PWD");
+	
         if (path == NULL) {
                 write(STDERR_FILENO, "Something goes wrong with getenv\n",
                       strlen("Something goes wrong with getenv\n"));
                 return 0;
         }
-        write(fdout, path, strlen(path) + 1);
-        write(fdout, "\n", strlen("\n")+1);
+        write(fdout, path, strlen(path));
+        write(fdout, "\n", strlen("\n"));
         return 1;
 }
