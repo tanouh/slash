@@ -24,86 +24,79 @@ int exec_cd(int argc, char *argv[]) {
         }
         if (argc == 1){
                 if (!strcmp(argv[0], "-"))
-                        return cd(lastWd,0);
-		else
+                        return cd(lastWd, 0);
+                else
                         return cd(argv[0],0);
-	}
-	if (argc == 2){
-		if(!strcmp(argv[0], "-L"))
+        }
+        if (argc == 2){
+                if(!strcmp(argv[0], "-L"))
                         return cd(argv[1],0);
 
                 else if (!strcmp(argv[0], "-P"))
                         return cd(argv[1],1);
-		else 
-			return 1;
+                else
+                        return 1;
 
-	}
+        }
         write(STDERR_FILENO, "-slash: invalid option1 \n", strlen("-slash: invalid option1 \n"));
 
         return 1;
 
 }
 
-/*
-int cdP(char *path) {
-    char * buff= malloc (sizeof(buff)*256);
-    getcwd(buff, 256);
-    strcat(buff, path);
-    if (setenv("PWD", buff, 1) == 0) {
-        write(STDERR_FILENO, "c'est bien passé\n",
-              strlen("c'est bien passé\n"));
-        pwdP(STDERR_FILENO);
+//int cd_return(char *path){
+//        if(chdir(lastWd) == -1)  {
+//                write(STDERR_FILENO, "-slash : cd : Something goes wrong with cd\n",
+//                strlen("-slash : cd : Something goes wrong with cd\n"));
+//                return 1;
+//        }
+//        return 0;
+//}
 
-        return 0;
-    }
-    write(STDERR_FILENO, "Something goes wrong with chdir\n",
-          strlen("Something goes wrong with chdir\n"));
-
-    return 1;
-}
-*/
-
-//le path doit pas contenir des / au debut, sauf pour absolue sinon segmentation fault
 int cd(char *path, int physical) {
-        char *buff = clean(path);
-	if(physical){
+        char *buff ;
+        char resolved_path[PHYS_PATH_LEN];
+        char * envpath;
+        if(physical){
+                envpath = realpath(getenv("PWD"), resolved_path);
+                buff = clean(path, envpath);
+                char new_wd[PHYS_PATH_LEN];
+                if(chdir(buff) == -1)  {
+                        write(STDERR_FILENO, "-slash : cd : Something goes wrong with cd\n",
+                              strlen("-slash : cd : Something goes wrong with cd\n"));
+                        return 1;
+                }
+                printf("%s\n", getcwd(new_wd,PHYS_PATH_LEN));
+                strcpy(lastWd, envpath);
+                setenv("PWD", getcwd(new_wd,PHYS_PATH_LEN), 1);
+                return 0;
 
-		char new_wd[PHYS_PATH_LEN];
-		
-		if(chdir(buff) == -1)  {
-			write(STDERR_FILENO, "-slash : cd : Something goes wrong with cd\n",
-              		strlen("-slash : cd : Something goes wrong with cd\n"));
-			return 1;
-		}		
-		
-		setenv("PWD", getcwd(new_wd,PHYS_PATH_LEN), 1);
-		
-		return 0;
+        }else{
+                envpath = getenv("PWD");
+                buff = clean(path, envpath);
+                if (open(buff, O_RDONLY) != -1) {
 
-	}else{
-		if (open(buff, O_RDONLY) != -1) {
-			
-			strcpy(lastWd, getenv("PWD"));
-			if (setenv("PWD", buff, 1) == 0) 
-				return 0;
-		
-		}
-	}
+                        strcpy(lastWd, envpath);
+                        if (setenv("PWD", buff, 1) == 0)
+                                return 0;
+
+                }
+        }
         write(STDERR_FILENO, "-slash : cd : Something goes wrong with cd\n",
               strlen("-slash : cd : Something goes wrong with cd\n"));
 
         return 1;
 }
 
-char *clean(char *path) {
+char *clean(char *path, char *realpath) {
 
 
-        char *pwd = malloc(strlen(getenv("PWD")));
+        char *pwd = malloc(strlen(realpath));
         if (pwd == NULL){
                 write(STDERR_FILENO, "Echec de l'allocation a pwd\n", strlen("Echec de l'allocation a pwd\n"));
                 return NULL;
         }
-        strcpy(pwd, getenv("PWD"));
+        strcpy(pwd, realpath);
 
         if (path[0] == '/') {
                 memset(pwd, 0x0, 1);
