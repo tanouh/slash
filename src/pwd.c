@@ -34,8 +34,8 @@ int pwdP(int fdout) {
 
                 return 0;
         }
-        write(fdout, path, strlen(path) + 1);
-        write(fdout, "\n", strlen("\n")+1);
+        write(fdout, path, strlen(path));
+        write(fdout, "\n", strlen("\n"));
         return 1;
 }
 
@@ -46,7 +46,7 @@ int pwdL(int fdout) {
                       strlen("Something goes wrong with getenv\n"));
                 return 0;
         }
-        write(fdout, path, strlen(path) + 1);
-        write(fdout, "\n", strlen("\n")+1);
+        write(fdout, path, strlen(path));
+        write(fdout, "\n", strlen("\n"));
         return 1;
 }
