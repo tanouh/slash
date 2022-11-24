@@ -64,13 +64,26 @@ int cd(char *path) {
 }
 
 char *clean(char *path) {
+
+
     char *pwd = getenv("PWD");
+
+
+
     int count = strlen(pwd) + strlen(path);
+
+    printf("%s PWD\n",pwd);
+    printf("%s PATH\n",path);
+
 
     size_t pwdv_size, pathv_size, res_size;
 
-    char **pathv = cut(path, &pathv_size);
+    printf(" Pwd: \n");
+
     char **pwdv = cut(pwd, &pwdv_size);
+
+    printf(" Path: \n");
+    char **pathv = cut(path, &pathv_size);
 
     res_size = pwdv_size + pathv_size;
     char **result = malloc(sizeof(char *) * res_size);
@@ -85,7 +98,7 @@ char *clean(char *path) {
         } else if (!strcmp(pathv[k], ".")) {
             count -= 2;
         } else {
-            result[pwdv_size - 1] = pathv[k];
+            result[pwdv_size] = pathv[k];
             pwdv_size++;
         }
     }
@@ -112,26 +125,67 @@ char *clean(char *path) {
 char **cut(char *path, size_t *size) {
     int i = 0;
     size_t path_s = strlen(path);
-    for (size_t k = 0; k < path_s; k++) {
-        if (path[k] == '/') i++;
+
+    char * npath = path;
+    int norm = path[path_s - 1] != '/';
+
+    if(norm) {
+        npath = malloc(path_s + 2);
+        memmove(npath, path, path_s);
+
+        npath[path_s] = '/';
+        npath[path_s + 1] = 0x0;
+    }
+
+    printf("%s\n", npath);
+
+    for (size_t k = 1; k < path_s + 1; k++) {
+        if (npath[k] == '/') i++;
     }
 
     *size = i;
+
+    int a = (npath[0] == '/') ? 1 : 0;
+    int b = 0;
+
     char **pathv = malloc(sizeof(char *) * i);
 
-    int a = (path[0] == '/') ? 0: 1;
-    int b = 0;
-    for (size_t k = 0; k < path_s && b < i; k++) {
-        if (path[k] == '/' && k) {
+    printf("%d  ",i);
+
+    for (size_t k = 0; k < path_s + 1 && b < i; k++) {
+        if (npath[k] == '/' && k) {
             pathv[b] = malloc(k - a + 1);
             memset(pathv[b], 0x0, k - a + 1);
-            memmove(pathv[b], path + a, k - a);
+            memmove(pathv[b], npath + a, k - a);
+            printf("%s  ",pathv[b]);
+            printf("%d  ",b);
+
+
             a = k + 1;
             b++;
         }
     }
+    printf(" \n");
+
+    if(norm) free(npath);
 
     return pathv;
 }
 
+char *removeFirstSlash(char *path){
+    if (path[0]== '/'){
+        char *path1= malloc (strlen(path)* sizeof(char *) -1);
+        memmove(path1, path +1, strlen(path)* sizeof(char *) -1);
+        return path1;
+    }
+    return path;
+}
 
+char *addLastSlash(char *path){
+    if (path[strlen(path)-1]!= '/'){
+        char *path1= malloc (strlen(path)* sizeof(char *) );
+        memmove(path1, '/'+path, strlen(path)* sizeof(char *) +1 );
+        return path1;
+    }
+    return path;
+}
