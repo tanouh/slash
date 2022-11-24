@@ -23,7 +23,7 @@ int exec_pwd(int argc, char *argv[]) {
         }
         //Celle-ci
         write(STDERR_FILENO, "-slash: invalid option \n", strlen("-slash: invalid option \n"));
-        return 0;
+        return 1;
 }
 
 int pwdP(int fdout) {
@@ -34,11 +34,11 @@ int pwdP(int fdout) {
                 write(STDERR_FILENO, "Something goes wrong with getcwd\n",
                       strlen("Something goes wrong with getcwd\n"));
 
-                return 0;
+                return 1;
         }
         write(fdout, path, strlen(path));
         write(fdout, "\n", strlen("\n"));
-        return 1;
+        return 0;
 }
 
 int pwdL(int fdout) {
@@ -47,9 +47,9 @@ int pwdL(int fdout) {
         if (path == NULL) {
                 write(STDERR_FILENO, "Something goes wrong with getenv\n",
                       strlen("Something goes wrong with getenv\n"));
-                return 0;
+                return 1;
         }
         write(fdout, path, strlen(path));
         write(fdout, "\n", strlen("\n"));
-        return 1;
+        return 0;
 }

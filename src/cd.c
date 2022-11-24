@@ -66,7 +66,7 @@ int cd(char *path, int physical) {
                               strlen("-slash : cd : Something goes wrong with cd\n"));
                         return 1;
                 }
-                printf("%s\n", getcwd(new_wd,PHYS_PATH_LEN));
+                // printf("%s\n", getcwd(new_wd,PHYS_PATH_LEN));
                 strcpy(lastWd, envpath);
                 setenv("PWD", getcwd(new_wd,PHYS_PATH_LEN), 1);
                 return 0;
@@ -75,7 +75,6 @@ int cd(char *path, int physical) {
                 envpath = getenv("PWD");
                 buff = clean(path, envpath);
                 if (open(buff, O_RDONLY) != -1) {
-
                         strcpy(lastWd, envpath);
                         if (setenv("PWD", buff, 1) == 0)
                                 return 0;
