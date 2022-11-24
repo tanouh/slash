@@ -112,12 +112,14 @@ char *clean(char *path, char *realpath) {
     for (size_t k = 0; k < pathv_size; k++) {
         if (!strcmp(pathv[k], "..")) {
             free(result[--pwdv_size]);
+            free(pathv[k]);
             result[pwdv_size] = NULL;
             count -= 3;
             res_size -= 2;
         } else if (!strcmp(pathv[k], ".")) {
             count -= 2;
             res_size -= 1;
+            free(pathv[k]);
         } else {
             result[pwdv_size] = pathv[k];
             pwdv_size++;
@@ -137,6 +139,7 @@ char *clean(char *path, char *realpath) {
             size_t rs = strlen(result[k]);
             memset(res + h, '/', 1);
             memmove(res + h + 1, result[k], rs);
+            free(result[k]);
             h += rs + 1;
         }
     }
