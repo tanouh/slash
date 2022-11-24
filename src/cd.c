@@ -7,32 +7,37 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include "cd.h"
+#include "pwd.h"
+
+
 
 extern char * lastWd;
 
 int exec_cd(int argc, char *argv[]) {
 //        printf("%s\n", lastWd);
         if (argc == 0) {
-                return cd(getenv("HOME"));
+                return cd(getenv("HOME"),0);
         }
         if (argc > 2) {
                 write(STDERR_FILENO, "-slash: too many arguments \n", strlen("-slash: too many arguments \n"));
                 return 1;
         }
         if (argc == 1){
-                if (!strcmp((argv[0]), "-"))
-                        return cd(lastWd);
+                if (!strcmp(argv[0], "-"))
+                        return cd(lastWd,0);
+		else
+                        return cd(argv[0],0);
+	}
+	if (argc == 2){
+		if(!strcmp(argv[0], "-L"))
+                        return cd(argv[1],0);
 
-                else if(!strcmp((argv[0]), "-L"))
-                        return cd(argv[1]);
+                else if (!strcmp(argv[0], "-P"))
+                        return cd(argv[1],1);
+		else 
+			return 1;
 
-                else if (!strcmp((argv[0]), "-P"))
-                        return cd(argv[1]);
-
-                else
-                        return cd(argv[0]);
-        }
-
+	}
         write(STDERR_FILENO, "-slash: invalid option1 \n", strlen("-slash: invalid option1 \n"));
 
         return 1;
@@ -59,14 +64,33 @@ int cdP(char *path) {
 */
 
 //le path doit pas contenir des / au debut, sauf pour absolue sinon segmentation fault
-int cd(char *path) {
+int cd(char *path, int physical) {
         char *buff = clean(path);
-        if (open(buff, O_RDONLY) != -1) {
-                strcpy(lastWd, getenv("PWD"));
-                if (setenv("PWD", buff, 1) == 0) return 0;
-        }
-        write(STDERR_FILENO, "Something goes wrong with cd\n",
-              strlen("Something goes wrong with cd\n"));
+	if(physical){
+
+		char new_wd[PHYS_PATH_LEN];
+		
+		if(chdir(buff) == -1)  {
+			write(STDERR_FILENO, "-slash : cd : Something goes wrong with cd\n",
+              		strlen("-slash : cd : Something goes wrong with cd\n"));
+			return 1;
+		}		
+		
+		setenv("PWD", getcwd(new_wd,PHYS_PATH_LEN), 1);
+		
+		return 0;
+
+	}else{
+		if (open(buff, O_RDONLY) != -1) {
+			
+			strcpy(lastWd, getenv("PWD"));
+			if (setenv("PWD", buff, 1) == 0) 
+				return 0;
+		
+		}
+	}
+        write(STDERR_FILENO, "-slash : cd : Something goes wrong with cd\n",
+              strlen("-slash : cd : Something goes wrong with cd\n"));
 
         return 1;
 }

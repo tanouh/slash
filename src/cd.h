@@ -13,7 +13,7 @@
  */
 int exec_cd(int argc, char **argv);
 
-int cd(char* path);
+int cd(char* path, int physical);
 
 char *clean (char *path);
 
