@@ -69,7 +69,6 @@ int cd(char *path, int physical) {
                         strcpy(lastWd, envpath);
                         if (setenv("PWD", buff, 1) == 0)
                                 return 0;
-                        }
                 }return cd(path, 1);
         }
         write(STDERR_FILENO, "-slash : cd : Something goes wrong with cd\n",
