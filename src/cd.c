@@ -44,15 +44,6 @@ int exec_cd(int argc, char *argv[]) {
 
 }
 
-//int cd_return(char *path){
-//        if(chdir(lastWd) == -1)  {
-//                write(STDERR_FILENO, "-slash : cd : Something goes wrong with cd\n",
-//                strlen("-slash : cd : Something goes wrong with cd\n"));
-//                return 1;
-//        }
-//        return 0;
-//}
-
 int cd(char *path, int physical) {
         char *buff ;
         char resolved_path[PHYS_PATH_LEN];
@@ -66,8 +57,8 @@ int cd(char *path, int physical) {
                               strlen("-slash : cd : Something goes wrong with cd\n"));
                         return 1;
                 }
-                printf("%s\n", getcwd(new_wd,PHYS_PATH_LEN));
-                strcpy(lastWd, envpath);
+//                printf("%s\n", getcwd(new_wd,PHYS_PATH_LEN));
+                strcpy(lastWd, getenv("PWD"));
                 setenv("PWD", getcwd(new_wd,PHYS_PATH_LEN), 1);
                 return 0;
 
@@ -75,12 +66,11 @@ int cd(char *path, int physical) {
                 envpath = getenv("PWD");
                 buff = clean(path, envpath);
                 if (open(buff, O_RDONLY) != -1) {
-
                         strcpy(lastWd, envpath);
-                        if (setenv("PWD", buff, 1) == 0)
+                        if (setenv("PWD", buff, 1) == 0) {
                                 return 0;
-
-                }
+                        }
+                }return cd(path, 1);
         }
         write(STDERR_FILENO, "-slash : cd : Something goes wrong with cd\n",
               strlen("-slash : cd : Something goes wrong with cd\n"));
