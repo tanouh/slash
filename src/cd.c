@@ -87,17 +87,17 @@ char *clean(char *path) {
 
         int count = strlen(pwd) + strlen(path) + 2;
 
-    printf("%s PWD\n",pwd);
-    printf("%s PATH\n",path);
+//    printf("%s PWD\n",pwd);
+//    printf("%s PATH\n",path);
 
 
         size_t pwdv_size, pathv_size, res_size;
 
-    printf(" Pwd: \n");
+//    printf(" Pwd: \n");
 
         char **pwdv = cut(pwd, &pwdv_size);
 
-    printf(" Path: \n");
+//    printf(" Path: \n");
         char **pathv = cut(path, &pathv_size);
 
         res_size = pwdv_size + pathv_size;
@@ -110,8 +110,10 @@ char *clean(char *path) {
                         free(result[--pwdv_size]);
                         result[pwdv_size] = NULL;
                         count -= 3;
+                        res_size -= 2;
                 } else if (!strcmp(pathv[k], ".")) {
                         count -= 2;
+                        res_size -= 1;
                 } else {
                         result[pwdv_size] = pathv[k];
                         pwdv_size++;
@@ -125,14 +127,14 @@ char *clean(char *path) {
         for (size_t k = 0; k < res_size; k++) {
                 if (result[k]) {
                         size_t rs = strlen(result[k]);
-            printf("%s %ld\n",result[k], rs);
+//            printf("%s %ld\n",result[k], rs);
                         memset(res + h, '/', 1);
                         memmove(res + h + 1, result[k], rs);
                         h += rs + 1;
                 }
         }
 
-    printf("%s\n", res);
+//    printf("%s\n", res);
 
         free(pathv);
         free(pwdv);
@@ -154,7 +156,7 @@ char **cut(char *path, size_t *size) {
                 npath[path_s + 1] = 0x0;
         }
 
-    printf("%s\n", npath);
+//    printf("%s\n", npath);
 
         for (size_t k = 1; k < path_s + 1; k++) {
                 if (npath[k] == '/') i++;
@@ -167,22 +169,22 @@ char **cut(char *path, size_t *size) {
 
         char **pathv = malloc(sizeof(char *) * i);
 
-    printf("%d  ",i);
+//    printf("%d  ",i);
 
         for (size_t k = 0; k < path_s + 1 && b < i; k++) {
                 if (npath[k] == '/' && k) {
                         pathv[b] = malloc(k - a + 1);
                         memset(pathv[b], 0x0, k - a + 1);
                         memmove(pathv[b], npath + a, k - a);
-            printf("%s  ",pathv[b]);
-            printf("%d  ",b);
+//            printf("%s  ",pathv[b]);
+//            printf("%d  ",b);
 
 
                         a = k + 1;
                         b++;
                 }
         }
-    printf(" \n");
+//    printf(" \n");
 
         if (norm) free(npath);
 
