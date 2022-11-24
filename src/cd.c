@@ -112,7 +112,6 @@ char *clean(char *path, char *realpath) {
     for (size_t k = 0; k < pathv_size; k++) {
         if (!strcmp(pathv[k], "..")) {
             free(result[--pwdv_size]);
-            free(pathv[k]);
             result[pwdv_size] = NULL;
             count -= 3;
             res_size -= 2;
