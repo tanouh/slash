@@ -70,7 +70,7 @@ char *clean(char *path) {
 
 
 
-    int count = strlen(pwd) + strlen(path);
+    int count = strlen(pwd) + strlen(path) + 2;
 
     printf("%s PWD\n",pwd);
     printf("%s PATH\n",path);
@@ -104,18 +104,20 @@ char *clean(char *path) {
     }
 
     char *res = malloc(count);
+    memset(res, 0x0, count);
+
     size_t h = 0;
     for (size_t k = 0; k < res_size; k++) {
         if (result[k]) {
-            printf("%s\n",result[k]);
             size_t rs = strlen(result[k]);
+            printf("%s %ld\n",result[k], rs);
             memset(res + h, '/', 1);
             memmove(res + h + 1, result[k], rs);
             h += rs + 1;
         }
     }
 
-    printf(" %s\n", res);
+    printf("%s\n", res);
 
     free(pathv);
     free(pwdv);
