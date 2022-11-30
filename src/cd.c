@@ -64,7 +64,7 @@ int cd(char *path, int physical) {
         envpath = getenv("PWD");
         buff = clean(path, envpath);
         if (open(buff, O_RDONLY) != -1) {
-            strcpy(lastWd, envpath);
+            strcpy(lastWd, envpath); //PROBLEM
             if (setenv("PWD", buff, 1) == 0) {
                 free(buff);
                 return 0;
@@ -78,10 +78,19 @@ int cd(char *path, int physical) {
     return 1;
 }
 
+/**
+ *
+ * @param path where you want to go
+ * @param realpath is the pwd
+ * @return a normalized path
+ *
+ * Example = clean ("I/like/./ice-cream/../../", "pwd") = "pwd/I"
+ */
+
 char *clean(char *path, char *realpath) {
 
 
-    char *pwd = malloc(strlen(realpath));
+    char *pwd = malloc(strlen(realpath) +1); //PROBLEM
     if (pwd == NULL) {
         write(STDERR_FILENO, "Echec de l'allocation a pwd\n", strlen("Echec de l'allocation a pwd\n"));
         return NULL;
@@ -112,6 +121,8 @@ char *clean(char *path, char *realpath) {
     for (size_t k = 0; k < pathv_size; k++) {
         if (!strcmp(pathv[k], "..")) {
             free(result[--pwdv_size]);
+            // Ce free donne des problèmes sur l'ordinateur de Ivan (c'est bizarre,  à approfondir)
+            free(pathv[k]);
             result[pwdv_size] = NULL;
             count -= 3;
             res_size -= 2;
@@ -127,8 +138,9 @@ char *clean(char *path, char *realpath) {
 
     char *res = malloc(count);
 
+
     memset(res, 0x0, count);
-    if (result == NULL) {
+    if (res == NULL) {
         write(STDERR_FILENO, "Echec de l'allocation \n", strlen("Echec de l'allocation\n"));
         return NULL;
     }
@@ -145,8 +157,18 @@ char *clean(char *path, char *realpath) {
     free(pwd);
     free(pathv);
     free(pwdv);
+    free(result);
     return res;
 }
+
+/**
+ *
+ * @param path
+ * @param size
+ * @return a char ** with each part of the path divided by an "/"
+ *
+ * Example = cut("I/like/ice-cream",3) = [["I"],["like"], ["ice-cream"]]
+ */
 
 char **cut(char *path, size_t *size) {
     int i = 0;
@@ -189,9 +211,3 @@ char **cut(char *path, size_t *size) {
     if (norm) free(npath);
     return pathv;
 }
-/*
-void free_absolute(char **path, size_t *path_s){
-    for (size_t b = 0; b < path_s ; b++) {
-        free(path[b]);
-    }
-}*/
