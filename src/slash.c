@@ -61,7 +61,13 @@ int main() {
 	ret_val = 0;
         prompt = initialize_prompt(ret_val);
 	toklist = makeTokenList();
-        lastWd = getenv("PWD");
+	lastWd = malloc(MAX_ARGS_STRLEN); 
+	if(lastWd == NULL){
+		perror("Echec malloc");
+		exit(1);
+	}
+        //lastWd = getenv("PWD");
+	memcpy(lastWd, getenv("PWD"), strlen(getenv("PWD")));
 	char *buffer;
         char **argCmd;
 
@@ -85,6 +91,7 @@ int main() {
 
         free(prompt);
         free(toklist);
+	free(lastWd);
 
 	write(STDERR_FILENO,"\n-slash terminate\n",20);
 	exit(ret_val);

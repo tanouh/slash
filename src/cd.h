@@ -17,7 +17,7 @@ int cd(char* path, int physical);
 
 char *clean (char *path, char *realpath);
 
-char **cut(char *path, size_t*);
+char **cut(char *path, size_t path_size, size_t *size);
 
 
 
