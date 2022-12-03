@@ -19,6 +19,7 @@ int exec_cd(int argc, char *argv[])
 	}
 	if (argc > 2)
 	{
+		free(argv);
 		write(STDERR_FILENO, "-slash: too many arguments \n", strlen("-slash: too many arguments \n"));
 		return 1;
 	}
@@ -39,6 +40,7 @@ int exec_cd(int argc, char *argv[])
 		else
 			return 1;
 	}
+	free(argv);
 	write(STDERR_FILENO, "-slash: invalid option1 \n", strlen("-slash: invalid option1 \n"));
 
 	return 1;
@@ -81,6 +83,7 @@ int cd(char *path, int physical)
 				return 0;
 			}
 		}
+		free(buff);
 		return cd(path, 1);
 	}
 	write(STDERR_FILENO, "-slash : cd : Something goes wrong with cd\n",

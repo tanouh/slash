@@ -110,6 +110,7 @@ struct tokenList *lex (char *input, tokenList *tokList){
 			return NULL;
 		}
 		tokenStr = strtok (NULL, delimiters);
-	}	
+	}
+	free(tmp);	
 	return tokList;
 }

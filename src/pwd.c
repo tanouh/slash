@@ -11,17 +11,21 @@ int exec_pwd(int argc, char *argv[]) {
         }
         //Si on doit faire pwd retourne meme si les argument ne sont pas valide enlever cette ligne et l'autre signalé
         if (argc > 1) {
+		free(argv);
                 write(STDERR_FILENO, "-slash: too many arguments \n", strlen("-slash: too many arguments \n"));
                 return 1;
         }
 
         if ((argc == 1) && (!strcmp((argv[0]), "-L"))) {
-                return pwdL(STDOUT_FILENO);
+                free(argv);
+		return pwdL(STDOUT_FILENO);
         }
         if ((argc == 1) && (!strcmp((argv[0]), "-P"))) {
-                return pwdP(STDOUT_FILENO);
+                free(argv);
+		return pwdP(STDOUT_FILENO);
         }
         //Celle-ci
+	free(argv);
         write(STDERR_FILENO, "-slash: invalid option \n", strlen("-slash: invalid option \n"));
         return 1;
 }
