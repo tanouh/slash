@@ -9,7 +9,7 @@
 #include "cd.h"
 #include "pwd.h"
 
-extern char *lastWd;
+#include "slash.h"
 
 int exec_cd(int argc, char *argv[])
 {
@@ -61,6 +61,7 @@ int cd(char *path, int physical)
 			return 1;
 		}
 		// strcpy(lastWd, getenv("PWD"));
+        memset(lastWd, 0x0, MAX_ARGS_STRLEN);
 		memmove(lastWd, getenv("PWD"), strlen(getenv("PWD")));
 
 		setenv("PWD", getcwd(new_wd, PHYS_PATH_LEN), 1);
@@ -74,6 +75,7 @@ int cd(char *path, int physical)
 		if (open(buff, O_RDONLY) != -1)
 		{
 			// strcpy(lastWd, envpath); //PROBLEM
+            memset(lastWd, 0x0, MAX_ARGS_STRLEN);
 			memmove(lastWd, envpath, strlen(envpath));
 			if (setenv("PWD", buff, 1) == 0)
 			{
@@ -111,7 +113,7 @@ char *clean(char *path, char *realpath)
 
 	if (path[0] == '/')
 	{
-		memset(pwd, 0x0, 1);
+		memset(pwd, 0x0, strlen(pwd));
 	}
 
 	int count = strlen(pwd) + strlen(path) + 2;

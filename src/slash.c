@@ -11,9 +11,7 @@
 #include "token.h"
 #include "pwd.h"
 #include "parser.h"
-
-#define MAX_ARGS_NUMBER 4096
-#define MAX_ARGS_STRLEN 4096
+#include "slash.h"
 
 #define SIZE_PROMPT 30
 #define SIZE_VALRET 3
@@ -30,7 +28,7 @@ char * prompt;
 struct tokenList *toklist;
 char *lastWd; // last working directory
 
-static char *initialize_prompt(int valret) {
+char *initialize_prompt(int valret) {
         char *valret_color;
         if (valret == 0) {
                 valret_color = GREEN;
@@ -67,6 +65,7 @@ int main() {
 		exit(1);
 	}
         //lastWd = getenv("PWD");
+        memset(lastWd, 0x0, MAX_ARGS_STRLEN);
 	memcpy(lastWd, getenv("PWD"), strlen(getenv("PWD")));
 	char *buffer;
         char **argCmd;
