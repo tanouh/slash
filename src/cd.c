@@ -9,7 +9,7 @@
 #include "cd.h"
 #include "pwd.h"
 
-extern char *lastWd;
+#include "slash.h"
 
 int exec_cd(int argc, char *argv[])
 {
@@ -71,9 +71,10 @@ int cd(char *path, int physical)
 			      strlen("-slash : cd : Something goes wrong with cd\n"));
 			return 1;
 		}
-		//strcpy(lastWd, getenv("PWD"));
-		memmove(lastWd, getenv("PWD"), strlen(getenv("PWD") + 1));
-		//printf("%s\n",lastWd);
+		// strcpy(lastWd, getenv("PWD"));
+        	memset(lastWd, 0x0, MAX_ARGS_STRLEN);
+		memmove(lastWd, getenv("PWD"), strlen(getenv("PWD")));
+
 		setenv("PWD", getcwd(new_wd, PHYS_PATH_LEN), 1);
 		free(buff);
 		return 0;
@@ -87,10 +88,9 @@ int cd(char *path, int physical)
 		// printf("%s\n",buff);
 		if (open(buff, O_RDONLY) != -1)
 		{
-			//strcpy(lastWd, envpath); //PROBLEM
-			memmove(lastWd, envpath, strlen(envpath)+1);
-			//printf("%s\n",lastWd);
-			
+			// strcpy(lastWd, envpath); //PROBLEM
+            		memset(lastWd, 0x0, MAX_ARGS_STRLEN);
+			memmove(lastWd, envpath, strlen(envpath));
 			if (setenv("PWD", buff, 1) == 0)
 			{
 				free(buff);
@@ -129,7 +129,7 @@ char *clean(char *path, char *realpath)
 	//strcpy(pwd, realpath);
 	if (path[0] == '/')
 	{
-		memset(pwd, 0x0, 1);
+		memset(pwd, 0x0, strlen(pwd));
 	}
 
 	int count = strlen(pwd) + strlen(path) + 2;

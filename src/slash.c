@@ -28,7 +28,7 @@ char * prompt;
 struct tokenList *toklist;
 char *lastWd; // last working directory
 
-static char *initialize_prompt(int valret) {
+char *initialize_prompt(int valret) {
         char *valret_color;
         if (valret == 0) {
                 valret_color = GREEN;
