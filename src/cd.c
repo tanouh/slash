@@ -28,11 +28,11 @@ int exec_cd(int argc, char *argv[])
 		if (!strcmp(argv[0], "-")){
 			return cd(lastWd, 0);
 		}
-			
+
 		else{
 			return cd(argv[0], 0);
 		}
-			
+
 	}
 	if (argc == 2)
 	{
@@ -52,7 +52,7 @@ int exec_cd(int argc, char *argv[])
 
 int cd(char *path, int physical)
 {
-	
+
 	char *buff;
 	char resolved_path[PHYS_PATH_LEN];
 	char *envpath;
@@ -60,16 +60,13 @@ int cd(char *path, int physical)
 	{
 		envpath = realpath(getenv("PWD"), resolved_path);
 		buff = clean(path, envpath);
-		// printf("DANS 1\n");
-		// printf("%s\n",envpath);
-		// printf("%s\n",buff);
 		char new_wd[PHYS_PATH_LEN];
 		if (chdir(buff) == -1)
 		{
 			free(buff);
 			write(STDERR_FILENO, "-slash : cd : Something goes wrong with cd\n",
 			      strlen("-slash : cd : Something goes wrong with cd\n"));
-			return 1;
+                        return 1;
 		}
 		// strcpy(lastWd, getenv("PWD"));
         	memset(lastWd, 0x0, MAX_ARGS_STRLEN);
@@ -83,9 +80,6 @@ int cd(char *path, int physical)
 	{
 		envpath = getenv("PWD");
 		buff = clean(path, envpath);
-		// printf("DANS 2\n");
-		// printf("%s\n",envpath);
-		// printf("%s\n",buff);
 		if (open(buff, O_RDONLY) != -1)
 		{
 			// strcpy(lastWd, envpath); //PROBLEM
@@ -97,7 +91,7 @@ int cd(char *path, int physical)
 				return 0;
 			}
 		}
-		
+
 		free(buff);
 		return cd(path, 1);
 	}
@@ -125,7 +119,7 @@ char *clean(char *path, char *realpath)
 		write(STDERR_FILENO, "Echec de l'allocation a pwd\n", strlen("Echec de l'allocation a pwd\n"));
 		return NULL;
 	}
-	memmove(pwd, realpath, strlen(realpath) + 1); 
+	memmove(pwd, realpath, strlen(realpath) + 1);
 	//strcpy(pwd, realpath);
 	if (path[0] == '/')
 	{
@@ -155,9 +149,8 @@ char *clean(char *path, char *realpath)
 		if (!strcmp(pathv[k], ".."))
 		{
 			free(result[--pwdv_size]);
-			// Ce free donne des problèmes sur l'ordinateur de Ivan (c'est bizarre,  à approfondir)
-			free(pathv[k]);
-			result[pwdv_size] = NULL;
+                        free(pathv[k]);
+ 			result[pwdv_size] = NULL;
 			count -= 3;
 			res_size -= 2;
 		}
@@ -173,7 +166,7 @@ char *clean(char *path, char *realpath)
 			pwdv_size++;
 		}
 	}
-	//count++; // + '/0'
+
 	char *res = malloc(count);
 	memset(res, 0x0, count);
 	if (res == NULL)
