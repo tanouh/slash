@@ -45,6 +45,7 @@ int exec_exit(int argc, char **argv){
 		exit(0);
 	}else{
 		char * ret = argv[0];
+		free(argv);
 		exit(atoi(ret));
 	}
 			

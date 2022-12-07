@@ -11,9 +11,7 @@
 #include "token.h"
 #include "pwd.h"
 #include "parser.h"
-
-#define MAX_ARGS_NUMBER 4096
-#define MAX_ARGS_STRLEN 4096
+#include "slash.h"
 
 #define SIZE_PROMPT 30
 #define SIZE_VALRET 3
@@ -67,7 +65,9 @@ int main() {
 		exit(1);
 	}
         //lastWd = getenv("PWD");
-	memcpy(lastWd, getenv("PWD"), strlen(getenv("PWD")));
+	memset(lastWd, 0x0, MAX_ARGS_STRLEN);
+	memmove(lastWd, getenv("PWD"), strlen(getenv("PWD")));
+	
 	char *buffer;
         char **argCmd;
 
@@ -76,7 +76,7 @@ int main() {
                 add_history(buffer);
                 free(prompt);
 		toklist = lex(buffer, toklist);
-		
+		free(buffer);
                 argCmd = malloc((toklist->len+1)*sizeof(char *));
                 if (argCmd == NULL){
                         perror("Echec de l'allocation de memoire a argCmd");
@@ -85,12 +85,10 @@ int main() {
                 }
                 ret_val = parser(toklist, argCmd);
                 free(argCmd);
-		free(buffer);
                 clearTokenList(toklist);
                 prompt = initialize_prompt(ret_val);
         }
         rl_clear_history();
-
         free(prompt);
         free(toklist);
 	free(lastWd);

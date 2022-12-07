@@ -34,7 +34,7 @@ int parserAux(token *first, token *last, int len){
                 argv[k] = first->name;
 		k++;
         }
-        argv[len-1] = last->name;
+	argv[len-1] = last->name; /* /!\ PBM */
         
         return fun(len, argv);
 }

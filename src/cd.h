@@ -1,6 +1,9 @@
 #ifndef PROJET_SY5_CD_H
 #define PROJET_SY5_CD_H
 
+#define MAX_ARGS_NUMBER 4096
+#define MAX_ARGS_STRLEN 4096
+
 /**
  * Changes the current directory as ref if valid, as the last work directory if '-', or $HOME by default
  * @param argc the number of arguments

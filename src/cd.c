@@ -25,10 +25,14 @@ int exec_cd(int argc, char *argv[])
 	}
 	if (argc == 1)
 	{
-		if (!strcmp(argv[0], "-"))
+		if (!strcmp(argv[0], "-")){
 			return cd(lastWd, 0);
-		else
+		}
+			
+		else{
 			return cd(argv[0], 0);
+		}
+			
 	}
 	if (argc == 2)
 	{
@@ -48,6 +52,7 @@ int exec_cd(int argc, char *argv[])
 
 int cd(char *path, int physical)
 {
+	
 	char *buff;
 	char resolved_path[PHYS_PATH_LEN];
 	char *envpath;
@@ -55,16 +60,20 @@ int cd(char *path, int physical)
 	{
 		envpath = realpath(getenv("PWD"), resolved_path);
 		buff = clean(path, envpath);
+		// printf("DANS 1\n");
+		// printf("%s\n",envpath);
+		// printf("%s\n",buff);
 		char new_wd[PHYS_PATH_LEN];
 		if (chdir(buff) == -1)
 		{
+			free(buff);
 			write(STDERR_FILENO, "-slash : cd : Something goes wrong with cd\n",
 			      strlen("-slash : cd : Something goes wrong with cd\n"));
 			return 1;
 		}
-		// strcpy(lastWd, getenv("PWD"));
-		memmove(lastWd, getenv("PWD"), strlen(getenv("PWD")));
-
+		//strcpy(lastWd, getenv("PWD"));
+		memmove(lastWd, getenv("PWD"), strlen(getenv("PWD") + 1));
+		//printf("%s\n",lastWd);
 		setenv("PWD", getcwd(new_wd, PHYS_PATH_LEN), 1);
 		free(buff);
 		return 0;
@@ -73,16 +82,22 @@ int cd(char *path, int physical)
 	{
 		envpath = getenv("PWD");
 		buff = clean(path, envpath);
+		// printf("DANS 2\n");
+		// printf("%s\n",envpath);
+		// printf("%s\n",buff);
 		if (open(buff, O_RDONLY) != -1)
 		{
-			// strcpy(lastWd, envpath); //PROBLEM
-			memmove(lastWd, envpath, strlen(envpath));
+			//strcpy(lastWd, envpath); //PROBLEM
+			memmove(lastWd, envpath, strlen(envpath)+1);
+			//printf("%s\n",lastWd);
+			
 			if (setenv("PWD", buff, 1) == 0)
 			{
 				free(buff);
 				return 0;
 			}
 		}
+		
 		free(buff);
 		return cd(path, 1);
 	}
@@ -104,14 +119,14 @@ int cd(char *path, int physical)
 char *clean(char *path, char *realpath)
 {
 	
-	char *pwd = malloc(strlen(realpath) + 1); // PROBLEM
+	char *pwd = malloc(MAX_ARGS_STRLEN); // PROBLEM
 	if (pwd == NULL)
 	{
 		write(STDERR_FILENO, "Echec de l'allocation a pwd\n", strlen("Echec de l'allocation a pwd\n"));
 		return NULL;
 	}
-	memcpy(pwd, realpath, strlen(realpath) + 1); 
-
+	memmove(pwd, realpath, strlen(realpath) + 1); 
+	//strcpy(pwd, realpath);
 	if (path[0] == '/')
 	{
 		memset(pwd, 0x0, 1);
@@ -158,7 +173,7 @@ char *clean(char *path, char *realpath)
 			pwdv_size++;
 		}
 	}
-
+	//count++; // + '/0'
 	char *res = malloc(count);
 	memset(res, 0x0, count);
 	if (res == NULL)
