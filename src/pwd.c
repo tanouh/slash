@@ -7,6 +7,7 @@
 
 int exec_pwd(int argc, char *argv[]) {
         if (argc == 0) {
+                free(argv);
                 return pwdL(STDOUT_FILENO);
         }
         //Si on doit faire pwd retourne meme si les argument ne sont pas valide enlever cette ligne et l'autre signalé

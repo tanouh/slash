@@ -15,6 +15,7 @@ int exec_cd(int argc, char *argv[])
 {
 	if (argc == 0)
 	{
+                free(argv);
 		return cd(getenv("HOME"), 0);
 	}
 	if (argc > 2)
@@ -26,24 +27,31 @@ int exec_cd(int argc, char *argv[])
 	if (argc == 1)
 	{
 		if (!strcmp(argv[0], "-")){
-			return cd(lastWd, 0);
+                        free(argv);
+                        return cd(lastWd, 0);
 		}
 
 		else{
-			return cd(argv[0], 0);
+                        char *tmp = argv[0];
+                        free(argv);
+                        return cd(tmp, 0);
 		}
 
 	}
-	if (argc == 2)
-	{
-		if (!strcmp(argv[0], "-L"))
-			return cd(argv[1], 0);
-
-		else if (!strcmp(argv[0], "-P"))
-			return cd(argv[1], 1);
-		else
-			return 1;
-	}
+	if (argc == 2) {
+                char *tmp = argv[1];
+                if (!strcmp(argv[0], "-L")) {
+                        free(argv);
+                        return cd(tmp, 0);
+                }
+                else if (!strcmp(argv[0], "-P")) {
+                        free(argv);
+                        return cd(tmp, 1);
+                } else {
+                        free(argv);
+                        return 1;
+                }
+        }
 	free(argv);
 	write(STDERR_FILENO, "-slash: invalid option1 \n", strlen("-slash: invalid option1 \n"));
 

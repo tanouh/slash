@@ -16,7 +16,7 @@ static struct cmdFun tabFun[] = {
 
 int parserAux(token *first, token *last, int len){
         if (first == NULL) return 1;
-        char **argv = calloc(len+1,sizeof(char *));
+        char **argv = calloc(len,sizeof(char *));
         if (argv == NULL) {
                 perror("Erreur lors de l'allocation de argv");
                 return 1;
