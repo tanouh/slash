@@ -214,7 +214,9 @@ char **cut(char *path, size_t path_s, size_t *size)
 {
 	int i = 0;
 	char *npath = path;
-	int norm = path[path_s - 1] != '/';
+	int norm = 0 ;
+	if (path_s > 0)
+		norm = path[path_s - 1] != '/';
 
 	if (norm)
 	{
