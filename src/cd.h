@@ -18,6 +18,8 @@ int exec_cd(int argc, char **argv);
 
 int cd(char* path, int physical);
 
+char *catPath(char *path, char *realpath);
+
 char *clean (char *path, char *realpath);
 
 char **cut(char *path, size_t path_size, size_t *size);
