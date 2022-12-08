@@ -60,66 +60,66 @@ int exec_cd(int argc, char *argv[])
 }
 
 
-/**
- * @brief 
- * Reconstruit le path pour que chaque lien symbolique se développe en leur chemin physique
- * 
- * @param path 
- * @param path_size 
- * @return char* 
- */
-
-char * build_physical_path (char *path, size_t path_size){
-	char * copy_path = malloc(PHYS_PATH_LEN);
-	if(copy_path == NULL){
-		write(STDERR_FILENO, "-slash: Segmentation fault\n", strlen("-slash: Segmentation fault\n"));
-		return NULL;
-	}
-	memmove(copy_path, path, path_size);
-
-
-	char * res = malloc(PHYS_PATH_LEN);
-	if(res == NULL){
-		free(copy_path);
-		write(STDERR_FILENO, "-slash: Segmentation fault\n", strlen("-slash: Segmentation fault\n"));
-		return NULL;
-	}
-
-	char * tok = strtok(copy_path, "/");
-
-	char  * read_path = malloc(PHYS_PATH_LEN); 
-	
-	if(read_path == NULL){
-		free(copy_path);
-		free(res);
-		write(STDERR_FILENO, "-slash: Segmentation fault\n", strlen("-slash: Segmentation fault\n"));
-		return NULL;
-	}
-
-	size_t index = 0 ;
-	while (tok != NULL){
-		if ( !strcmp (tok, "..") || !strcmp(tok, ".")){
-			memmove(res + index ,tok,strlen(tok));
-			index += strlen(tok);
-			continue;
-		}else{
-			memmove(res+index, tok, strlen(tok));
-			char buf [PHYS_PATH_LEN];
-			if (readlink(res, buf, PHYS_PATH_LEN) < 0){
-				goto fail;
-			} 
-		}
-		
-	}
-	return res; 
-
-	fail :
-		free(copy_path);
-		free(res);
-		free(read_path);
-		return NULL;
-	
-}
+//**
+// * @brief
+// * Reconstruit le path pour que chaque lien symbolique se développe en leur chemin physique
+// *
+// * @param path
+// * @param path_size
+// * @return char*
+// */
+//
+//char * build_physical_path (char *path, size_t path_size){
+//	char * copy_path = malloc(PHYS_PATH_LEN);
+//	if(copy_path == NULL){
+//		write(STDERR_FILENO, "-slash: Segmentation fault\n", strlen("-slash: Segmentation fault\n"));
+//		return NULL;
+//	}
+//	memmove(copy_path, path, path_size);
+//
+//
+//	char * res = malloc(PHYS_PATH_LEN);
+//	if(res == NULL){
+//		free(copy_path);
+//		write(STDERR_FILENO, "-slash: Segmentation fault\n", strlen("-slash: Segmentation fault\n"));
+//		return NULL;
+//	}
+//
+//	char * tok = strtok(copy_path, "/");
+//
+//	char  * read_path = malloc(PHYS_PATH_LEN);
+//
+//	if(read_path == NULL){
+//		free(copy_path);
+//		free(res);
+//		write(STDERR_FILENO, "-slash: Segmentation fault\n", strlen("-slash: Segmentation fault\n"));
+//		return NULL;
+//	}
+//
+//	size_t index = 0 ;
+//	while (tok != NULL){
+//		if ( !strcmp (tok, "..") || !strcmp(tok, ".")){
+//			memmove(res + index ,tok,strlen(tok));
+//			index += strlen(tok);
+//			continue;
+//		}else{
+//			memmove(res+index, tok, strlen(tok));
+//			char buf [PHYS_PATH_LEN];
+//			if (readlink(res, buf, PHYS_PATH_LEN) < 0){
+//				goto fail;
+//			}
+//		}
+//
+//	}
+//	return res;
+//
+//	fail :
+//		free(copy_path);
+//		free(res);
+//		free(read_path);
+//		return NULL;
+//
+//}
 
 int cd(char *path, int physical)
 {
@@ -129,35 +129,30 @@ int cd(char *path, int physical)
 	char *envpath;
 	if (physical)
 	{
-		
-		envpath = realpath(getenv("PWD"), resolved_path);
-		
-		
-		
-		/*
-		Créer un autre path qui développe les liens symboliques.
-		*/
 
-		char buf [PHYS_PATH_LEN];
-		// printf("\n%ld\n",readlink(path, buf, PHYS_PATH_LEN));
-		// printf("%s\n",buf);
-		buff = clean(path,envpath);
-		
-		char new_wd[PHYS_PATH_LEN];
-		
+		envpath = realpath(getenv("PWD"), resolved_path);
+
+		buff = catPath(path,envpath);
+
+                char new_wd[PHYS_PATH_LEN];
+
 		if (chdir(buff) == -1)
 		{
 			free(buff);
-			write(STDERR_FILENO, "-slash : cd : Something goes wrong with cd\n",
-			      strlen("-slash : cd : Something goes wrong with cd\n"));
+			write(STDERR_FILENO, "-slash : cd : Something goes really wrong with cd\n",
+			      strlen("-slash : cd : Something goes really wrong with cd\n"));
                         return 1;
 		}
-		// strcpy(lastWd, getenv("PWD"));
-        	memset(lastWd, 0x0, MAX_ARGS_STRLEN);
+
+                free(buff);
+                buff = clean(path, envpath);
+
+                memset(lastWd, 0x0, MAX_ARGS_STRLEN);
 		memmove(lastWd, getenv("PWD"), strlen(getenv("PWD")));
 
-		setenv("PWD", getcwd(new_wd, PHYS_PATH_LEN), 1);
-		free(buff);
+                setenv("PWD", getcwd(new_wd, PHYS_PATH_LEN), 1);
+
+                free(buff);
 		return 0;
 	}
 	else
@@ -166,22 +161,50 @@ int cd(char *path, int physical)
 		buff = clean(path, envpath);
 		if (open(buff, O_RDONLY) != -1)
 		{
-			// strcpy(lastWd, envpath); //PROBLEM
-            		memset(lastWd, 0x0, MAX_ARGS_STRLEN);
+                        memset(lastWd, 0x0, MAX_ARGS_STRLEN);
 			memmove(lastWd, envpath, strlen(envpath));
-			if (setenv("PWD", buff, 1) == 0)
-			{
+
+                        if (setenv("PWD", buff, 1) == 0){
 				free(buff);
 				return 0;
 			}
 		}
-		free(buff);
-		return cd(path, 1);
+
+                free(buff);
+                return cd(path, 1);
 	}
 	write(STDERR_FILENO, "-slash : cd : Something goes wrong with cd\n",
 	      strlen("-slash : cd : Something goes wrong with cd\n"));
 
 	return 1;
+}
+
+char *catPath(char *path, char *realpath) {
+
+        char *buff;
+
+        if (path[0] == '/') {
+                buff = malloc(strlen(path) + 1);
+                if (buff == NULL) {
+                        write(STDERR_FILENO, "Echec de l'allocation a buff\n",
+                              strlen("Echec de l'allocation a buff\n"));
+                        return NULL;
+                }
+                strcpy(buff, path);
+                return buff;
+        }
+
+        buff = malloc(strlen(path) + strlen(realpath) + 2);
+        if (buff == NULL) {
+                write(STDERR_FILENO, "Echec de l'allocation a buff\n", strlen("Echec de l'allocation a buff\n"));
+                return NULL;
+        }
+
+        size_t size = strlen(realpath);
+        memmove(buff, realpath, size);
+        memset(buff + size, '/', 1);
+        memmove(buff + size + 1, path, strlen(path)+1);
+        return buff;
 }
 
 /**
@@ -193,17 +216,16 @@ int cd(char *path, int physical)
  * Example = clean ("I/like/./ice-cream/../../", "pwd") = "pwd/I"
  */
 
-char *clean(char *path, char *realpath)
-{
-	
-	char *pwd = malloc(PHYS_PATH_LEN); // PROBLEM
+char *clean(char *path, char *realpath){
+
+	char *pwd = malloc(PHYS_PATH_LEN);
 	if (pwd == NULL)
 	{
 		write(STDERR_FILENO, "Echec de l'allocation a pwd\n", strlen("Echec de l'allocation a pwd\n"));
 		return NULL;
 	}
 	memmove(pwd, realpath, strlen(realpath) + 1);
-	
+
 	if (path[0] == '/')
 	{
 		memset(pwd, 0x0, strlen(pwd));
@@ -246,7 +268,7 @@ char *clean(char *path, char *realpath)
 		else
 		{
 			result[pwdv_size] = pathv[k];
-			pwdv_size++; 
+			pwdv_size++;
 		}
 	}
 
@@ -262,7 +284,6 @@ char *clean(char *path, char *realpath)
 	{
 		if (result[k])
 		{
-			
 			size_t rs = strlen(result[k]);
 			memset(res + h, '/', 1);
 			memmove(res + h + 1, result[k], rs);
