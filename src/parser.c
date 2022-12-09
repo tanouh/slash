@@ -7,6 +7,7 @@
 #include "pwd.h"
 #include "token.h"
 #include "parser.h"
+#include "external.h"
 
 static struct cmdFun tabFun[] = {
         { "cd", exec_cd },
@@ -27,17 +28,38 @@ int parserAux(token *first, token *last, int len){
                        fun = tabFun[i].fun;
                 }
         }
-        int k = 0;
-        if (fun == NULL) return 1;
-        while (first != last && first->next != last){
-                first = first->next;
-                argv[k] = first->name;
-		k++;
-        }
-        if (len > 0) argv[len-1] = last->name;
+        int k;
+        // if (fun == NULL) return 1;
+        // while (first != last && first->next != last){
+        //         first = first->next;
+        //         argv[k] = first->name;
+	// 	k++;
+        // }
+        // if (len > 0) argv[len-1] = last->name;
 
-        return fun(len, argv);
+        // return fun(len, argv);
+
+	if (fun != NULL){
+		k=0;
+	}else{
+		argv[0] = first->name;
+		len +=1;
+		k=1;
+	}
+	while (first != last && first ->next != last){
+		first = first->next;
+		argv[k] = first->name;
+		k++;
+	}
+	if (len > 0) argv[len-1] = last->name;
+
+	if(fun == NULL){
+		return exec_external(len, argv);
+	}else{
+		return fun(len,argv);
+	}
 }
+
 
 int parser(struct tokenList *tokList, char **argCmd){
         token *current = tokList->first;

@@ -1,0 +1,13 @@
+#ifndef PROJET_SY5_EXTERNAL_H
+#define PROJET_SY5_EXTERNAL_H
+
+/**
+ * Modifie l'array des arguments de sorte que le dernier élément soit NULL 
+ */
+char ** formate_args(int argc, char ** argv);
+/**
+ * Exécute les commandes externes
+ */
+int exec_external(int argc, char ** argv);
+
+#endif
