@@ -150,10 +150,13 @@ int cd(char *path, int physical)
                 memset(lastWd, 0x0, MAX_ARGS_STRLEN);
 		memmove(lastWd, getenv("PWD"), strlen(getenv("PWD")));
 
-                setenv("PWD", getcwd(new_wd, PHYS_PATH_LEN), 1);
+                if (setenv("PWD", getcwd(new_wd, PHYS_PATH_LEN), 1) == 0){
+                        free(buff);
+                        return 0;
+                }
 
                 free(buff);
-		return 0;
+		return 1;
 	}
 	else
 	{
@@ -161,6 +164,13 @@ int cd(char *path, int physical)
 		buff = clean(path, envpath);
 		if (open(buff, O_RDONLY) != -1)
 		{
+                        if (chdir(buff) == -1)
+                        {
+                                free(buff);
+                                write(STDERR_FILENO, "-slash : cd : Something goes reallyry wrong with cd\n",
+                                      strlen("-slash : cd : Something goes reallyry wrong with cd\n"));
+                                return 1;
+                        }
                         memset(lastWd, 0x0, MAX_ARGS_STRLEN);
 			memmove(lastWd, envpath, strlen(envpath));
 
@@ -168,6 +178,8 @@ int cd(char *path, int physical)
 				free(buff);
 				return 0;
 			}
+                        free(buff);
+                        return 1;
 		}
 
                 free(buff);
