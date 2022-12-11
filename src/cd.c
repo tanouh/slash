@@ -3,14 +3,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
 #include "cd.h"
 #include "pwd.h"
-
 #include "slash.h"
+#include "slasherr.h"
 
 int exec_cd(int argc, char *argv[])
 {
@@ -22,7 +22,7 @@ int exec_cd(int argc, char *argv[])
 	if (argc > 2)
 	{
 		free(argv);
-		write(STDERR_FILENO, "-slash: too many arguments \n", strlen("-slash: too many arguments \n"));
+		print_err("cd", "too many arguments");
 		return 1;
 	}
 	if (argc == 1)
@@ -54,73 +54,10 @@ int exec_cd(int argc, char *argv[])
                 }
         }
 	free(argv);
-	write(STDERR_FILENO, "-slash: invalid option1 \n", strlen("-slash: invalid option1 \n"));
-
+	print_err("cd", "invalid option");
+	
 	return 1;
 }
-
-
-//**
-// * @brief
-// * Reconstruit le path pour que chaque lien symbolique se développe en leur chemin physique
-// *
-// * @param path
-// * @param path_size
-// * @return char*
-// */
-//
-//char * build_physical_path (char *path, size_t path_size){
-//	char * copy_path = malloc(PHYS_PATH_LEN);
-//	if(copy_path == NULL){
-//		write(STDERR_FILENO, "-slash: Segmentation fault\n", strlen("-slash: Segmentation fault\n"));
-//		return NULL;
-//	}
-//	memmove(copy_path, path, path_size);
-//
-//
-//	char * res = malloc(PHYS_PATH_LEN);
-//	if(res == NULL){
-//		free(copy_path);
-//		write(STDERR_FILENO, "-slash: Segmentation fault\n", strlen("-slash: Segmentation fault\n"));
-//		return NULL;
-//	}
-//
-//	char * tok = strtok(copy_path, "/");
-//
-//	char  * read_path = malloc(PHYS_PATH_LEN);
-//
-//	if(read_path == NULL){
-//		free(copy_path);
-//		free(res);
-//		write(STDERR_FILENO, "-slash: Segmentation fault\n", strlen("-slash: Segmentation fault\n"));
-//		return NULL;
-//	}
-//
-//	size_t index = 0 ;
-//	while (tok != NULL){
-//		if ( !strcmp (tok, "..") || !strcmp(tok, ".")){
-//			memmove(res + index ,tok,strlen(tok));
-//			index += strlen(tok);
-//			continue;
-//		}else{
-//			memmove(res+index, tok, strlen(tok));
-//			char buf [PHYS_PATH_LEN];
-//			if (readlink(res, buf, PHYS_PATH_LEN) < 0){
-//				goto fail;
-//			}
-//		}
-//
-//	}
-//	return res;
-//
-//	fail :
-//		free(copy_path);
-//		free(res);
-//		free(read_path);
-//		return NULL;
-//
-//}
-
 int cd(char *path, int physical)
 {
 
@@ -139,8 +76,8 @@ int cd(char *path, int physical)
 		if (chdir(buff) == -1)
 		{
 			free(buff);
-			write(STDERR_FILENO, "-slash : cd : Something goes really wrong with cd\n",
-			      strlen("-slash : cd : Something goes really wrong with cd\n"));
+			print_err("cd", "Couldn't change the directory");
+			
                         return 1;
 		}
 
@@ -167,8 +104,7 @@ int cd(char *path, int physical)
                         if (chdir(buff) == -1)
                         {
                                 free(buff);
-                                write(STDERR_FILENO, "-slash : cd : Something goes reallyry wrong with cd\n",
-                                      strlen("-slash : cd : Something goes reallyry wrong with cd\n"));
+				print_err("cd", "Couldn't change the directory");
                                 return 1;
                         }
                         memset(lastWd, 0x0, MAX_ARGS_STRLEN);
@@ -185,8 +121,7 @@ int cd(char *path, int physical)
                 free(buff);
                 return cd(path, 1);
 	}
-	write(STDERR_FILENO, "-slash : cd : Something goes wrong with cd\n",
-	      strlen("-slash : cd : Something goes wrong with cd\n"));
+	print_err("cd", "Something goes wrong with cd");
 
 	return 1;
 }
@@ -198,8 +133,7 @@ char *catPath(char *path, char *realpath) {
         if (path[0] == '/') {
                 buff = malloc(strlen(path) + 1);
                 if (buff == NULL) {
-                        write(STDERR_FILENO, "Echec de l'allocation a buff\n",
-                              strlen("Echec de l'allocation a buff\n"));
+			print_err("cd", MALLOC_ERR);
                         return NULL;
                 }
                 strcpy(buff, path);
@@ -208,7 +142,7 @@ char *catPath(char *path, char *realpath) {
 
         buff = malloc(strlen(path) + strlen(realpath) + 2);
         if (buff == NULL) {
-                write(STDERR_FILENO, "Echec de l'allocation a buff\n", strlen("Echec de l'allocation a buff\n"));
+		print_err("cd", MALLOC_ERR);
                 return NULL;
         }
 
@@ -233,7 +167,7 @@ char *clean(char *path, char *realpath){
 	char *pwd = malloc(PHYS_PATH_LEN);
 	if (pwd == NULL)
 	{
-		write(STDERR_FILENO, "Echec de l'allocation a pwd\n", strlen("Echec de l'allocation a pwd\n"));
+		print_err("cd", MALLOC_ERR);
 		return NULL;
 	}
 	memmove(pwd, realpath, strlen(realpath) + 1);
@@ -255,7 +189,7 @@ char *clean(char *path, char *realpath){
 	char **result = malloc(sizeof(char *) * res_size);
 	if (result == NULL)
 	{
-		write(STDERR_FILENO, "Echec de l'allocation \n", strlen("Echec de l'allocation\n"));
+		print_err("cd", MALLOC_ERR);
 		return NULL;
 	}
 
@@ -288,7 +222,7 @@ char *clean(char *path, char *realpath){
 	memset(res, 0x0, count);
 	if (res == NULL)
 	{
-		write(STDERR_FILENO, "Echec de l'allocation \n", strlen("Echec de l'allocation\n"));
+		print_err("cd", MALLOC_ERR);
 		return NULL;
 	}
 	size_t h = 0;
@@ -330,6 +264,11 @@ char **cut(char *path, size_t path_s, size_t *size)
 	if (norm)
 	{
 		npath = malloc(path_s + 2);
+		if (npath == NULL)
+		{
+			print_err("cd", MALLOC_ERR);
+			return NULL;
+		}
 		memmove(npath, path, path_s);
 
 		npath[path_s] = '/';
@@ -348,6 +287,12 @@ char **cut(char *path, size_t path_s, size_t *size)
 	int b = 0;
 
 	char **pathv = malloc(sizeof(char *) * i);
+	if (pathv == NULL)
+	{
+		free(npath);
+		print_err("cd", MALLOC_ERR);
+		return NULL;
+	}
 
 	for (size_t k = 0; k < path_s + 1 && b < i; k++)
 	{

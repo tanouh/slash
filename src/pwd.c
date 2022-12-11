@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "pwd.h"
+#include "slasherr.h"
 
 int exec_pwd(int argc, char *argv[]) {
         if (argc == 0) {
@@ -12,8 +13,8 @@ int exec_pwd(int argc, char *argv[]) {
         }
         //Si on doit faire pwd retourne meme si les argument ne sont pas valide enlever cette ligne et l'autre signalé
         if (argc > 1) {
+		print_err("pwd","too many arguments"); 
 		free(argv);
-                write(STDERR_FILENO, "-slash: too many arguments \n", strlen("-slash: too many arguments \n"));
                 return 1;
         }
 
@@ -27,7 +28,7 @@ int exec_pwd(int argc, char *argv[]) {
         }
         //Celle-ci
 	free(argv);
-        write(STDERR_FILENO, "-slash: invalid option \n", strlen("-slash: invalid option \n"));
+	print_err("pwd", "invalid option");
         return 1;
 }
 
@@ -36,8 +37,7 @@ int pwdP(int fdout) {
         char *path = realpath(getenv("PWD"),buff);
         // if (getcwd(path, PHYS_PATH_LEN) == NULL) {
 	if( path == NULL){
-                write(STDERR_FILENO, "Something goes wrong with getcwd\n",
-                      strlen("Something goes wrong with getcwd\n"));
+		print_err("pwd", "Something went wrong");
 
                 return 1;
         }
@@ -50,8 +50,8 @@ int pwdL(int fdout) {
         char *path = getenv("PWD");
 	
         if (path == NULL) {
-                write(STDERR_FILENO, "Something goes wrong with getenv\n",
-                      strlen("Something goes wrong with getenv\n"));
+                print_err("pwd", "Something went wrong");
+
                 return 1;
         }
         write(fdout, path, strlen(path));

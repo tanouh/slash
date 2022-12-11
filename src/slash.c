@@ -12,6 +12,7 @@
 #include "pwd.h"
 #include "parser.h"
 #include "slash.h"
+#include "slasherr.h"
 
 #define SIZE_PROMPT 30
 #define SIZE_VALRET 3
@@ -61,7 +62,7 @@ int main() {
 	toklist = makeTokenList();
 	lastWd = malloc(MAX_ARGS_STRLEN); 
 	if(lastWd == NULL){
-		perror("Echec malloc");
+		print_err(NULL, MALLOC_ERR);
 		exit(1);
 	}
         //lastWd = getenv("PWD");
@@ -79,7 +80,7 @@ int main() {
 		free(buffer);
                 argCmd = malloc((toklist->len+1)*sizeof(char *));
                 if (argCmd == NULL){
-                        perror("Echec de l'allocation de memoire a argCmd");
+                        print_err(NULL, MALLOC_ERR);
                         clearTokenList(toklist);
                         break;
                 }

@@ -8,6 +8,7 @@
 #include "token.h"
 #include "parser.h"
 #include "external.h"
+#include "slasherr.h"
 
 static struct cmdFun tabFun[] = {
         { "cd", exec_cd },
@@ -19,7 +20,7 @@ int parserAux(token *first, token *last, int len){
         if (first == NULL) return 1;
         char **argv = calloc(len,sizeof(char *));
         if (argv == NULL) {
-                perror("Erreur lors de l'allocation de argv");
+                print_err(NULL, MALLOC_ERR);
                 return 1;
         }
         int (*fun)(int, char**) = NULL;

@@ -1,12 +1,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
 #include "token.h"
+#include "slasherr.h"
 
 struct tokenList *makeTokenList() {
         struct tokenList *tokList = malloc(sizeof(tokenList));
         if (tokList == NULL) {
-                perror("Echec de l'allocation de memoire a tokenList\n");
+		print_err(NULL, MALLOC_ERR);
                 return NULL;
         }
         tokList->len = 0;
@@ -18,12 +20,12 @@ struct tokenList *makeTokenList() {
 int makeToken(struct tokenList *tokList, const char *name, enum tokenType tokType) {
         token *tok = malloc(sizeof(token));
         if (tok == NULL) {
-                perror("Echec de l'allocation de memoire a tok\n");
+                print_err(NULL, MALLOC_ERR);
                 return 0;
         }
         tok->name = malloc((1 + strlen(name)) * sizeof(char));
         if (tok->name == NULL) {
-                perror("Echec de l'allocation de memoire a tok->name");
+                print_err(NULL, MALLOC_ERR);
                 free(tok);
                 return 0;
         }

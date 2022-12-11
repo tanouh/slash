@@ -1,9 +1,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
 #include "lexer.h"
 #include "token.h"
-
+#include "slasherr.h"
 
 /*
 TODO : Pour le jalon 2 : tester que l'élément avant n'est pas un | pcq sinon le token serait une commande
@@ -75,7 +76,7 @@ struct tokenList *lex (char *input, tokenList *tokList){
 
 	if (tmp == NULL)
 	{
-		perror("Echec de l'allocation de memoire a tmp\n");
+		print_err(NULL,  MALLOC_ERR);
 		return NULL;
 	}
 	
