@@ -90,6 +90,7 @@ int main() {
                 prompt = initialize_prompt(ret_val);
         }
         rl_clear_history();
+	free(buffer); // à voir si ça ne pose pas problème
         free(prompt);
         free(toklist);
 	free(lastWd);

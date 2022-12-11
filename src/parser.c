@@ -18,7 +18,7 @@ static struct cmdFun tabFun[] = {
 
 int parserAux(token *first, token *last, int len){
         if (first == NULL) return 1;
-        char **argv = calloc(len,sizeof(char *));
+        char **argv = calloc(len+1,sizeof(char *));
         if (argv == NULL) {
                 print_err(NULL, MALLOC_ERR);
                 return 1;
@@ -44,7 +44,7 @@ int parserAux(token *first, token *last, int len){
 		k=0;
 	}else{
 		argv[0] = first->name;
-		len +=1;
+		len ++;
 		k=1;
 	}
 	while (first != last && first ->next != last){
@@ -68,6 +68,7 @@ int parser(struct tokenList *tokList, char **argCmd){
         token *startCmd = tokList->first;
         int len = 0;
         while (current != NULL){
+
                 if (current->type == CMD){
                         len = 0;
                         *startCmd = *current;
