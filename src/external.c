@@ -61,5 +61,5 @@ int exec_external(int argc, char **argv)
 	error:
 		free(args_list);
 		free(argv);
-		return 1;
+		return 127;
 }

@@ -67,6 +67,7 @@ int parser(struct tokenList *tokList, char **argCmd){
         if (current->type != CMD) return 1;
         token *startCmd = tokList->first;
         int len = 0;
+	int val_ret = 0;
         while (current != NULL){
 
                 if (current->type == CMD){
@@ -74,7 +75,8 @@ int parser(struct tokenList *tokList, char **argCmd){
                         *startCmd = *current;
                 }
                 if (current->next == NULL || current->next->type == CMD) {
-                        if (parserAux(startCmd, current, len)) return 1;
+			val_ret = parserAux(startCmd, current, len);
+                        if (val_ret) return val_ret;
                 }
                 current = current->next;
                 len++;
