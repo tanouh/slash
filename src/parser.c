@@ -8,6 +8,7 @@
 #include "token.h"
 #include "parser.h"
 #include "external.h"
+#include "joker.h"
 #include "slasherr.h"
 
 static struct cmdFun tabFun[] = {
@@ -17,42 +18,42 @@ static struct cmdFun tabFun[] = {
 };
 
 int parserAux(token *first, token *last, int len){
+
         if (first == NULL) return 1;
-        char **argv = calloc(len+1,sizeof(char *));
+
+        char **argv = calloc(len,sizeof(char *));
         if (argv == NULL) {
                 print_err(NULL, MALLOC_ERR);
                 return 1;
         }
+
+//        char *fun_Name = first->name;
         int (*fun)(int, char**) = NULL;
         for (int i = 0; i < sizeof(tabFun)/sizeof(tabFun[0]); i++){
+                for (int j = 0; j < strlen(tabFun[i].cmdName); j++){
+//                        if (tabFun[i].cmdName[j] == '*') fun_Name = expand_cmd();
+                }
                 if (!strcmp(tabFun[i].cmdName,first->name)){
-                       fun = tabFun[i].fun;
+                        fun = tabFun[i].fun;
                 }
         }
-        int k;
-        // if (fun == NULL) return 1;
-        // while (first != last && first->next != last){
-        //         first = first->next;
-        //         argv[k] = first->name;
-	// 	k++;
-        // }
-        // if (len > 0) argv[len-1] = last->name;
 
-        // return fun(len, argv);
+        argv[0] = first->name;
 
-	if (fun != NULL){
-		k=0;
-	}else{
-		argv[0] = first->name;
-		len ++;
-		k=1;
-	}
-	while (first != last && first ->next != last){
-		first = first->next;
-		argv[k] = first->name;
-		k++;
-	}
-	if (len > 0) argv[len-1] = last->name;
+        token *current = first;
+        for (int i = 1; i < len; i++){
+                current = current->next;
+                argv[i] = current->name;
+        }
+
+        for (int i = 0; i < len; i++){
+                for (int j = 0; j < strlen(argv[i]); j++){
+                        if (argv[i][j] == '*'){
+                                return expand_path(argv, &first, &last, i, len);
+                        }
+                }
+        }
+
 
 	if(fun == NULL){
 		return exec_external(len, argv);
@@ -71,7 +72,7 @@ int parser(struct tokenList *tokList, char **argCmd){
         while (current != NULL){
 
                 if (current->type == CMD){
-                        len = 0;
+                        len = 1;
                         *startCmd = *current;
                 }
                 if (current->next == NULL || current->next->type == CMD) {

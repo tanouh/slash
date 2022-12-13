@@ -7,22 +7,22 @@
 #include "slasherr.h"
 
 int exec_pwd(int argc, char *argv[]) {
-        if (argc == 0) {
+        if (argc == 1) {
                 free(argv);
                 return pwdL(STDOUT_FILENO);
         }
         //Si on doit faire pwd retourne meme si les argument ne sont pas valide enlever cette ligne et l'autre signalé
-        if (argc > 1) {
-		print_err("pwd","too many arguments"); 
-		free(argv);
+        if (argc > 2) {
+                print_err("pwd","too many arguments");
+                free(argv);
                 return 1;
         }
 
-        if ((argc == 1) && (!strcmp((argv[0]), "-L"))) {
+        if ((argc == 2) && (!strcmp((argv[1]), "-L"))) {
                 free(argv);
 		return pwdL(STDOUT_FILENO);
         }
-        if ((argc == 1) && (!strcmp((argv[0]), "-P"))) {
+        if ((argc == 2) && (!strcmp((argv[1]), "-P"))) {
                 free(argv);
 		return pwdP(STDOUT_FILENO);
         }

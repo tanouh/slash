@@ -14,38 +14,38 @@
 
 int exec_cd(int argc, char *argv[])
 {
-	if (argc == 0)
+	if (argc == 1)
 	{
                 free(argv);
 		return cd(getenv("HOME"), 0);
 	}
-	if (argc > 2)
+	if (argc > 3)
 	{
 		free(argv);
 		print_err("cd", "too many arguments");
 		return 1;
 	}
-	if (argc == 1)
+	if (argc == 2)
 	{
-		if (!strcmp(argv[0], "-")){
+		if (!strcmp(argv[1], "-")){
                         free(argv);
                         return cd(lastWd, 0);
 		}
 
 		else{
-                        char *tmp = argv[0];
+                        char *tmp = argv[1];
                         free(argv);
                         return cd(tmp, 0);
 		}
 
 	}
-	if (argc == 2) {
-                char *tmp = argv[1];
-                if (!strcmp(argv[0], "-L")) {
+	if (argc == 3) {
+                char *tmp = argv[2];
+                if (!strcmp(argv[1], "-L")) {
                         free(argv);
                         return cd(tmp, 0);
                 }
-                else if (!strcmp(argv[0], "-P")) {
+                else if (!strcmp(argv[1], "-P")) {
                         free(argv);
                         return cd(tmp, 1);
                 } else {
@@ -55,7 +55,7 @@ int exec_cd(int argc, char *argv[])
         }
 	free(argv);
 	print_err("cd", "invalid option");
-	
+
 	return 1;
 }
 int cd(char *path, int physical)
@@ -77,7 +77,7 @@ int cd(char *path, int physical)
 		{
 			free(buff);
 			print_err("cd", "Couldn't change the directory");
-			
+
                         return 1;
 		}
 
@@ -95,28 +95,25 @@ int cd(char *path, int physical)
                 free(buff);
 		return 1;
 	}
-	else
-	{
-		envpath = getenv("PWD");
-		buff = clean(path, envpath);
-		if (open(buff, O_RDONLY) != -1)
-		{
-                        if (chdir(buff) == -1)
-                        {
+	else {
+                envpath = getenv("PWD");
+                buff = clean(path, envpath);
+                if (open(buff, O_RDONLY) != -1) {
+                        if (chdir(buff) == -1) {
                                 free(buff);
 				print_err("cd", "Couldn't change the directory");
                                 return 1;
                         }
                         memset(lastWd, 0x0, MAX_ARGS_STRLEN);
-			memmove(lastWd, envpath, strlen(envpath));
+                        memmove(lastWd, envpath, strlen(envpath));
 
-                        if (setenv("PWD", buff, 1) == 0){
-				free(buff);
-				return 0;
-			}
+                        if (setenv("PWD", buff, 1) == 0) {
+                                free(buff);
+                                return 0;
+                        }
                         free(buff);
                         return 1;
-		}
+                }
 
                 free(buff);
                 return cd(path, 1);
