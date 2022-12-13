@@ -81,8 +81,6 @@ int expand_path(char **argv, token **first, token **last, int posArg, int nbArg)
         char *followPath;
         int basePathEmpty = getExtremity(&basePath, &followPath, argv, posArg);
         if (basePathEmpty == -1) return 1;
-//        printf("%s\n", basePath);
-//        printf("%s\n", followPath);
 
         struct dirent *file;
         int nbFile = 0;
@@ -110,7 +108,6 @@ int expand_path(char **argv, token **first, token **last, int posArg, int nbArg)
                 return 1;
         }
 
-        int k = 0;
         struct dirent **filesRead = malloc(nbFile * sizeof (struct dirent));
         if(filesRead == NULL){
                 if (!basePathEmpty) free(basePath);
@@ -119,6 +116,7 @@ int expand_path(char **argv, token **first, token **last, int posArg, int nbArg)
                 return 1;
         }
 
+        int k = 0;
         while((file = readdir(dir))){
                 if (file->d_name[0] != '.' &&
                 !strcmp(pattern, file->d_name + (strlen(file->d_name) - strlen(pattern)))){
@@ -126,95 +124,56 @@ int expand_path(char **argv, token **first, token **last, int posArg, int nbArg)
                         k++;
                 }
         }
+        closedir(dir);
 
         scandir(basePath, &filesRead, filter, alphasort);
         if (basePathEmpty) basePath = "";
 
         int i = 0;
         token *currentTok = *first;
-//        while (i < posArg && currentTok->next != *last){
-//                currentTok = currentTok->next;
-//                i++;
-//        }
+        while (i < posArg-1 && currentTok->next != *last){
+                currentTok = currentTok->next;
+                i++;
+        }
         token *newTok;
         token *tmpTok;
 
-        i = 0;
-        int j = 0;
-        for (int k = 1; k < nbArg + nbFile - 1; k++){
-                if (k < posArg || k >= nbFile + posArg){
-                        if (i == posArg) i++;
-                        newTok = malloc(sizeof(token));
-                        if (newTok == NULL){
-                                free(filesRead);
-                                if (!basePathEmpty) free(basePath);
-                                free(followPath);
-                                perror("Echec de l'allocation de memoire a newTok\n");
-                                return 1;
-                        }
-
-                        tmpTok = currentTok->next;
-                        currentTok->next = newTok;
-                        tmpTok->precedent = newTok;
-
-                        newTok->name = malloc(strlen(basePath) + strlen(argv[posArg + i]) + strlen(followPath));
-                        if (newTok->name == NULL){
-                                free(filesRead);
-                                if (!basePathEmpty) free(basePath);
-                                free(followPath);
-                                perror("Echec de l'allocation de memoire a newTok\n");
-                                return 1;
-                        }
-                        memmove(newTok->name, basePath, strlen(basePath));
-                        memmove(newTok->name + strlen(basePath),
-                                argv[posArg+i], strlen(argv[posArg+i]) - strlen(followPath) - strlen(pattern) -2);
-                        memmove(newTok->name + strlen(basePath) + strlen(argv[posArg+i]) - strlen(followPath) - strlen(pattern) -2,
-                                followPath, strlen(followPath)+1);
-//                        strcpy(newTok->name, argv[posArg + i]);
-                        newTok->precedent = currentTok;
-                        newTok->next = tmpTok;
-                        newTok->type = ARG;
-
-                        i++;
-                }else {
-
-                        newTok = malloc(sizeof(token));
-                        if (newTok == NULL){
-                                free(filesRead);
-                                if (!basePathEmpty) free(basePath);
-                                free(followPath);
-                                perror("Echec de l'allocation de memoire a newTok\n");
-                                return 1;
-                        }
-
-                        tmpTok = currentTok->next;
-                        currentTok->next = newTok;
-                        tmpTok->precedent = newTok;
-
-                        newTok->name = malloc(strlen(basePath) + strlen(filesRead[j]->d_name) + strlen(followPath));
-                        if (newTok->name == NULL){
-                                free(filesRead);
-                                if (!basePathEmpty) free(basePath);
-                                free(followPath);
-                                perror("Echec de l'allocation de memoire a newTok\n");
-                                return 1;
-                        }
-
-                        memmove(newTok->name, basePath, strlen(basePath));
-                        memmove(newTok->name + strlen(basePath),
-                                filesRead[j]->d_name, strlen(filesRead[j]->d_name));
-                        memmove(newTok->name + strlen(basePath) + strlen(filesRead[j]->d_name),
-                                followPath, strlen(followPath) + 1);
-//                        strcpy(newTok->name, filesRead[j]->d_name);
-                        newTok->precedent = currentTok;
-                        newTok->next = tmpTok;
-                        newTok->type = ARG;
-
-                        j++;
+        for (k = 0; k < nbFile; k++){
+                newTok = malloc(sizeof(token));
+                if (newTok == NULL){
+                        free(filesRead);
+                        if (!basePathEmpty) free(basePath);
+                        free(followPath);
+                        perror("Echec de l'allocation de memoire a newTok\n");
+                        return 1;
                 }
-                currentTok = currentTok->next;
 
+                tmpTok = currentTok->next;
+                currentTok->next = newTok;
+                tmpTok->precedent = newTok;
+
+                newTok->name = malloc(strlen(basePath) + strlen(filesRead[k]->d_name) + strlen(followPath));
+                if (newTok->name == NULL){
+                        free(filesRead);
+                        if (!basePathEmpty) free(basePath);
+                        free(followPath);
+                        perror("Echec de l'allocation de memoire a newTok\n");
+                        return 1;
+                }
+
+                memmove(newTok->name, basePath, strlen(basePath));
+                memmove(newTok->name + strlen(basePath),
+                        filesRead[k]->d_name, strlen(filesRead[k]->d_name));
+                memmove(newTok->name + strlen(basePath) + strlen(filesRead[k]->d_name),
+                        followPath, strlen(followPath) + 1);
+//                        strcpy(newTok->name, filesRead[j]->d_name);
+                newTok->precedent = currentTok;
+                newTok->next = tmpTok;
+                newTok->type = ARG;
+
+                currentTok = currentTok->next;
         }
+
         if (posArg + 1 == nbArg) {
                 tmpTok = (*last)->next;
                 *last = (*last)->precedent;
@@ -224,7 +183,14 @@ int expand_path(char **argv, token **first, token **last, int posArg, int nbArg)
                         free(tmpTok->name);
                         free(tmpTok);
                 }
+        }else{
+                tmpTok = currentTok->next->next;
+                free(tmpTok->precedent->name);
+                free(tmpTok->precedent);
+                tmpTok->precedent = currentTok;
+                currentTok->next = tmpTok;
         }
+
 
         free(pattern);
         free(filesRead);
