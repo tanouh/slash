@@ -6,6 +6,7 @@
 #include "token.h"
 #include "parser.h"
 #include "joker.h"
+#include "slashLib.h"
 
 char *pattern;
 
@@ -35,7 +36,8 @@ int getExtremity(char **basePath, char **followPath, char **argv, int posArg){
                 posBeginning = posFollowing;
                 posFollowing += strlen(expandedPath)+1;
 
-                while(argv[posArg][posFollowing+1] == '/'){
+                while(posFollowing+1 < strlen(argv[posArg]) &&
+                argv[posArg][posFollowing+1] == '/'){
                         cptSlash++;
                         posFollowing++;
                 }
@@ -93,10 +95,11 @@ int verifFile(char *basePath, char *followPath, char *fileName){
         }
         memmove(path, basePath, strlen(basePath));
         memmove(path + strlen(basePath), fileName, strlen(fileName));
-        memmove(path + strlen(basePath) + strlen(fileName), followPath, strlen(followPath) + 1);
+        memmove(path + strlen(basePath) + strlen(fileName), followPath, strlen(followPath)+1);
 
         char *tmp = malloc(strlen(path) + 1);
         if (tmp == NULL) {
+                free(path);
                 perror("Echec de l'allocation de memoire a tmp\n");
                 return 1;
         }
@@ -113,6 +116,7 @@ int verifFile(char *basePath, char *followPath, char *fileName){
         char *regex = malloc(strlen(path) - strlen(lastFile)+1);
         if (regex == NULL) {
                 free(tmp);
+                free(path);
                 perror("Echec de l'allocation de memoire a tmp\n");
                 return 1;
         }
@@ -121,6 +125,8 @@ int verifFile(char *basePath, char *followPath, char *fileName){
 
         DIR *dir = opendir(regex);
         if (dir == NULL){
+                free(tmp);
+                free(path);
                 free(regex);
                 return 1;
         }
@@ -128,12 +134,16 @@ int verifFile(char *basePath, char *followPath, char *fileName){
 
         while ((file = readdir(dir))) {
                 if (!strcmp(path + strlen(path) - strlen(lastFile), file->d_name)) {
+                        free(dir);
                         free(tmp);
+                        free(path);
                         free(regex);
                         return 0;
                 }
         }
         free(tmp);
+        free(dir);
+        free(path);
         free(regex);
         return -1;
 }
@@ -199,8 +209,11 @@ int expand_path(char **argv, token **first, token **last, int posArg, int *nbArg
                 if (file->d_name[0] != '.' &&
                 !strcmp(pattern, file->d_name + (strlen(file->d_name) - strlen(pattern)))){
                         ret_val = verifFile(basePath, followPath, file->d_name);
-                        if (ret_val == 1) return 1;
-                        if (!ret_val) {
+                        if (ret_val == 1) {
+                                freeTab((void **)filesRead, nbFile);
+                                return 1;
+                        }
+                        if (!ret_val || ret_val == -1) {
                                 filesRead[k] = file;
                                 k++;
                         }
@@ -223,7 +236,8 @@ int expand_path(char **argv, token **first, token **last, int posArg, int *nbArg
         for (k = 0; k < nbFile; k++){
                 newTok = malloc(sizeof(token));
                 if (newTok == NULL){
-                        free(filesRead);
+                        free(pattern);
+                        freeTab((void **)filesRead, nbFile);
                         if (!basePathEmpty) free(basePath);
                         free(followPath);
                         perror("Echec de l'allocation de memoire a newTok\n");
@@ -234,9 +248,10 @@ int expand_path(char **argv, token **first, token **last, int posArg, int *nbArg
                 currentTok->next = newTok;
                 tmpTok->precedent = newTok;
 
-                newTok->name = malloc(strlen(basePath) + strlen(filesRead[k]->d_name) + strlen(followPath) + 1);
+                newTok->name = malloc(strlen(basePath) + strlen(filesRead[k]->d_name) + strlen(followPath) +1);
                 if (newTok->name == NULL){
-                        free(filesRead);
+                        free(pattern);
+                        freeTab((void **)filesRead, nbFile);
                         if (!basePathEmpty) free(basePath);
                         free(followPath);
                         perror("Echec de l'allocation de memoire a newTok\n");
@@ -275,7 +290,7 @@ int expand_path(char **argv, token **first, token **last, int posArg, int *nbArg
 
 
         free(pattern);
-        free(filesRead);
+        freeTab((void **)filesRead, nbFile);
         if (!basePathEmpty) free(basePath);
         free(followPath);
         *nbArg = *nbArg + nbFile - 1;
