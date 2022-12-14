@@ -17,6 +17,27 @@ static struct cmdFun tabFun[] = {
         { "exit", exec_exit },
 };
 
+//int remakeArgv(char ***argv, token *first, int len){
+//        if (*argv == NULL)
+//                *argv = calloc(len, len*sizeof(char *));
+//        else
+//                *argv = realloc(*argv, len*sizeof (char *));
+//        if (argv == NULL){
+//                print_err(NULL, MALLOC_ERR);
+//                return 1;
+//        }
+//
+//        token *current = first;
+//        *argv[0] = first->name;
+//
+//        for (int i = 1; i < len; i++){
+//                current = current->next;
+//                *argv[i] = current->name;
+//        }
+//        return 0;
+//
+//}
+
 int parserAux(token *first, token *last, int len){
 
         if (first == NULL) return 1;
@@ -46,10 +67,28 @@ int parserAux(token *first, token *last, int len){
                 argv[i] = current->name;
         }
 
+        int ret_val;
         for (int i = 0; i < len; i++){
                 for (int j = 0; j < strlen(argv[i]); j++){
                         if (argv[i][j] == '*'){
-                                return expand_path(argv, &first, &last, i, len);
+                                 ret_val = expand_path(argv, &first, &last, i, &len);
+                                 if (ret_val == 0){
+                                         argv = realloc(argv, len*sizeof (char *));
+                                         if (argv == NULL) {
+                                                 print_err(NULL, MALLOC_ERR);
+                                                 return 1;
+                                         }
+                                         current = first;
+                                         argv[0] = first->name;
+
+                                         for (int i = 1; i < len; i++){
+                                                 current = current->next;
+                                                 argv[i] = current->name;
+                                         }
+                                         i--;
+                                 }
+                                 else if (ret_val == -1) continue;
+                                 else return 1;
                         }
                 }
         }

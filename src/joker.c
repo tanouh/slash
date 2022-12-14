@@ -68,6 +68,63 @@ int getExtremity(char **basePath, char **followPath, char **argv, int posArg){
         return basePathEmpty;
 }
 
+int verifFile(char *basePath, char *followPath, char *fileName){
+
+        if (!strcmp(basePath, ".")) basePath = "./";
+        for (int i = 0; i < strlen(followPath); i++){
+                if (followPath[i] == '*') return 0;
+        }
+        char *path = malloc(strlen(basePath) + strlen(fileName) + strlen(followPath) + 1);
+        if (path == NULL){
+                perror("Echec de l'allocation de memoire a path\n");
+                return 1;
+        }
+        memmove(path, basePath, strlen(basePath));
+        memmove(path + strlen(basePath), fileName, strlen(fileName));
+        memmove(path + strlen(basePath) + strlen(fileName), followPath, strlen(followPath) + 1);
+
+        char *tmp = malloc(strlen(path) + 1);
+        if (tmp == NULL) {
+                perror("Echec de l'allocation de memoire a tmp\n");
+                return 1;
+        }
+        strcpy(tmp, path);
+
+        const char *delimiters = "/";
+
+        char *lastFile;
+        char *cutPath = strtok(tmp, delimiters);
+        while (cutPath != NULL) {
+                lastFile = cutPath;
+                cutPath = strtok(NULL, delimiters);
+        }
+        char *regex = malloc(strlen(path) - strlen(lastFile)+1);
+        if (regex == NULL) {
+                free(tmp);
+                perror("Echec de l'allocation de memoire a tmp\n");
+                return 1;
+        }
+        memmove(regex, path, strlen(path) - strlen(lastFile));
+        memset(regex + strlen(path) - strlen(lastFile), '\0', 1);
+
+        DIR *dir = opendir(regex);
+        if (dir == NULL){
+                free(regex);
+                return 1;
+        }
+        struct dirent *file;
+
+        while ((file = readdir(dir))) {
+                if (!strcmp(path + strlen(path) - strlen(lastFile), file->d_name)) {
+                        free(tmp);
+                        free(regex);
+                        return 0;
+                }
+        }
+        free(tmp);
+        free(regex);
+        return -1;
+}
 
 int filter (const struct dirent *file){
         return (file->d_name[0] != '.' &&
@@ -75,7 +132,7 @@ int filter (const struct dirent *file){
 }
 
 
-int expand_path(char **argv, token **first, token **last, int posArg, int nbArg) {
+int expand_path(char **argv, token **first, token **last, int posArg, int *nbArg) {
 
         char *basePath;
         char *followPath;
@@ -92,12 +149,22 @@ int expand_path(char **argv, token **first, token **last, int posArg, int nbArg)
                 return 1;
         }
 
-        while((file = readdir(dir))){
+        int ret_val;
+        int argValid = 0;
+        while((file = readdir(dir))) {
                 if (file->d_name[0] != '.' &&
-                    !strcmp(pattern, file->d_name + (strlen(file->d_name) - strlen(pattern))))
-                        nbFile++;
+                    !strcmp(pattern, file->d_name + (strlen(file->d_name) - strlen(pattern)))) {
+                        ret_val = verifFile(basePath, followPath, file->d_name);
+                        if (ret_val == 1) return 1;
+                        if (!ret_val) {
+                                argValid = 1;
+                                nbFile++;
+                        }
+                }
         }
         closedir(dir);
+
+        if (!argValid) return -1;
 
         dir = opendir(basePath);
         file = NULL;
@@ -120,8 +187,12 @@ int expand_path(char **argv, token **first, token **last, int posArg, int nbArg)
         while((file = readdir(dir))){
                 if (file->d_name[0] != '.' &&
                 !strcmp(pattern, file->d_name + (strlen(file->d_name) - strlen(pattern)))){
-                        filesRead[k] = file;
-                        k++;
+                        ret_val = verifFile(basePath, followPath, file->d_name);
+                        if (ret_val == 1) return 1;
+                        if (!ret_val) {
+                                filesRead[k] = file;
+                                k++;
+                        }
                 }
         }
         closedir(dir);
@@ -166,7 +237,7 @@ int expand_path(char **argv, token **first, token **last, int posArg, int nbArg)
                         filesRead[k]->d_name, strlen(filesRead[k]->d_name));
                 memmove(newTok->name + strlen(basePath) + strlen(filesRead[k]->d_name),
                         followPath, strlen(followPath) + 1);
-//                        strcpy(newTok->name, filesRead[j]->d_name);
+
                 newTok->precedent = currentTok;
                 newTok->next = tmpTok;
                 newTok->type = ARG;
@@ -174,7 +245,7 @@ int expand_path(char **argv, token **first, token **last, int posArg, int nbArg)
                 currentTok = currentTok->next;
         }
 
-        if (posArg + 1 == nbArg) {
+        if (posArg + 1 == *nbArg) {
                 tmpTok = (*last)->next;
                 *last = (*last)->precedent;
                 (*last)->next = tmpTok;
@@ -194,8 +265,8 @@ int expand_path(char **argv, token **first, token **last, int posArg, int nbArg)
 
         free(pattern);
         free(filesRead);
-        free(argv);
         if (!basePathEmpty) free(basePath);
         free(followPath);
-        return parserAux(*first, *last, nbArg + nbFile -1);
+        *nbArg = *nbArg + nbFile - 1;
+        return 0;
 }
