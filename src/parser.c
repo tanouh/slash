@@ -17,27 +17,6 @@ static struct cmdFun tabFun[] = {
         { "exit", exec_exit },
 };
 
-//int remakeArgv(char ***argv, token *first, int len){
-//        if (*argv == NULL)
-//                *argv = calloc(len, len*sizeof(char *));
-//        else
-//                *argv = realloc(*argv, len*sizeof (char *));
-//        if (argv == NULL){
-//                print_err(NULL, MALLOC_ERR);
-//                return 1;
-//        }
-//
-//        token *current = first;
-//        *argv[0] = first->name;
-//
-//        for (int i = 1; i < len; i++){
-//                current = current->next;
-//                *argv[i] = current->name;
-//        }
-//        return 0;
-//
-//}
-
 int parserAux(token *first, token *last, int len){
 
         if (first == NULL) return 1;
@@ -68,6 +47,9 @@ int parserAux(token *first, token *last, int len){
         }
 
         int ret_val;
+        current = first;
+        token *before;
+        token *next;
         for (int i = 0; i < len; i++){
                 for (int j = 0; j < strlen(argv[i]); j++){
                         if (argv[i][j] == '*'){
@@ -85,12 +67,59 @@ int parserAux(token *first, token *last, int len){
                                                  current = current->next;
                                                  argv[i] = current->name;
                                          }
-                                         i--;
+                                         current = first;
+                                         i = -1;
+                                         break;
                                  }
-                                 else if (ret_val == -1) continue;
+                                 else if (ret_val == -1) {
+                                         len -= 1;
+                                         if (last->next == NULL && (current == last || current->next ==  last)){
+                                                 if (current == last){
+                                                         last = current->precedent;
+                                                         last->next = NULL;
+                                                         free(current->name);
+                                                         free(current);
+                                                         current = last;
+                                                 }
+                                                 if (current->next ==  last){
+                                                         current->precedent->next = last;
+                                                         last->precedent = current->precedent;
+                                                         free(current->name);
+                                                         free(current);
+                                                         current = last;
+                                                 }
+                                         }else {
+                                                 if (current == first) return 1;
+                                                 before = current->precedent;
+                                                 next = current->next;
+                                                 if (before != NULL)
+                                                         before->next = next;
+                                                 if (next != NULL)
+                                                         next->precedent = before;
+                                                 free(current->name);
+                                                 free(current);
+                                         }
+
+                                         argv = realloc(argv, len*sizeof (char *));
+                                         if (argv == NULL) {
+                                                 print_err(NULL, MALLOC_ERR);
+                                                 return 1;
+                                         }
+                                         current = first;
+                                         argv[0] = first->name;
+
+                                         for (int i = 1; i < len; i++){
+                                                 current = current->next;
+                                                 argv[i] = current->name;
+                                         }
+                                         current = first;
+                                         i = -1;
+
+                                         break;
+                                 }
                                  else return 1;
                         }
-                }
+                }if (i != -1) current = current->next;
         }
 
 

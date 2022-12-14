@@ -223,7 +223,7 @@ int expand_path(char **argv, token **first, token **last, int posArg, int *nbArg
                 currentTok->next = newTok;
                 tmpTok->precedent = newTok;
 
-                newTok->name = malloc(strlen(basePath) + strlen(filesRead[k]->d_name) + strlen(followPath));
+                newTok->name = malloc(strlen(basePath) + strlen(filesRead[k]->d_name) + strlen(followPath) + 1);
                 if (newTok->name == NULL){
                         free(filesRead);
                         if (!basePathEmpty) free(basePath);
