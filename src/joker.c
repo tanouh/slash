@@ -23,11 +23,23 @@ int getExtremity(char **basePath, char **followPath, char **argv, int posArg){
         strcpy(tmp, argv[posArg]);
 
         int posBeginning = 0;
-        int posFollowing = -1;
+        int posFollowing;
+        if (argv[posArg][0] == '/')
+                posFollowing = 0;
+        else posFollowing = -1;
         char *expandedPath = strtok(tmp, delimiters);
-        while (expandedPath != NULL) {
+
+        int cptSlash = 0;
+        while (expandedPath != NULL || cptSlash > 0) {
+                if (cptSlash) cptSlash--;
                 posBeginning = posFollowing;
                 posFollowing += strlen(expandedPath)+1;
+
+                while(argv[posArg][posFollowing+1] == '/'){
+                        cptSlash++;
+                        posFollowing++;
+                }
+
                 if (expandedPath[0] == '*') break;
                 expandedPath = strtok(NULL, delimiters);
         }
@@ -145,8 +157,7 @@ int expand_path(char **argv, token **first, token **last, int posArg, int *nbArg
         if(dir == NULL){
                 if (!basePathEmpty) free(basePath);
                 free(followPath);
-                perror("Echec de l'ouverture du repertoire dir\n");
-                return 1;
+                return -1;
         }
 
         int ret_val;
@@ -172,7 +183,7 @@ int expand_path(char **argv, token **first, token **last, int posArg, int *nbArg
                 if (!basePathEmpty) free(basePath);
                 free(followPath);
                 perror("Echec de l'ouverture du repertoire dir\n");
-                return 1;
+                return -1;
         }
 
         struct dirent **filesRead = malloc(nbFile * sizeof (struct dirent));
