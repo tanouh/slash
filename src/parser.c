@@ -17,9 +17,11 @@ static struct cmdFun tabFun[] = {
         { "exit", exec_exit },
 };
 
-int parserAux(struct tokenList **tokList, int len){
+int parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int len){
 
         if ((*tokList)->first == NULL) return 1;
+        int firstCmd = ((*tokList)->first == (*fullTokList)->first);
+        int lastCmd = ((*tokList)->last == (*fullTokList)->last);
 
         char **argv = calloc(len,sizeof(char *));
         if (argv == NULL) {
@@ -27,11 +29,9 @@ int parserAux(struct tokenList **tokList, int len){
                 return 1;
         }
 
-//        char *fun_Name = (*first)->name;
         int (*fun)(int, char**) = NULL;
         for (int i = 0; i < sizeof(tabFun)/sizeof(tabFun[0]); i++){
                 for (int j = 0; j < strlen(tabFun[i].cmdName); j++){
-//                        if (tabFun[i].cmdName[j] == '*') fun_Name = expand_cmd();
                 }
                 if (!strcmp(tabFun[i].cmdName,(*tokList)->first->name)){
                         fun = tabFun[i].fun;
@@ -51,8 +51,10 @@ int parserAux(struct tokenList **tokList, int len){
         for (int i = 0; i < len; i++){
                 for (int j = 0; j < strlen(argv[i]); j++){
                         if (argv[i][j] == '*'){
-                                 ret_val = expand_path(argv, tokList, i, &len);
-                                 if (ret_val == 0){
+                                ret_val = expand_path(argv, tokList, i, &len, current->type);
+                                if (firstCmd) (*fullTokList)->first = (*tokList)->first;
+                                if (lastCmd) (*fullTokList)->last = (*tokList)->last;
+                                if (ret_val == 0){
                                          argv = realloc(argv, len*sizeof (char *));
                                          if (argv == NULL) {
                                                  print_err(NULL, MALLOC_ERR);
@@ -83,6 +85,9 @@ int parserAux(struct tokenList **tokList, int len){
                                          argv[0] = current->name;
 
                                          for (int i = 1; i < len; i++){
+                                                 if (current == NULL) perror("1111");
+                                                 if (argv[i] == NULL) perror("2222");
+                                                 if (current->name == NULL) perror("3333");
                                                  current = current->next;
                                                  argv[i] = current->name;
                                          }
@@ -109,6 +114,7 @@ int parser(struct tokenList *tokList, char **argCmd){
         token *current = tokList->first;
         if (current->type != CMD) return 1;
         token *startCmd = tokList->first;
+        token *tmp;
         struct tokenList *partial = makeTokenList();
         int len = 0;
 	int val_ret = 0;
@@ -118,12 +124,13 @@ int parser(struct tokenList *tokList, char **argCmd){
                         *startCmd = *current;
                 }
                 if (current->next == NULL || current->next->type == CMD) {
+                        tmp = current;
                         current = current->next;
                         while(partial->first != NULL)
                                 freeToken(partial, partial->first);
                         partial->first = startCmd;
-                        partial->last = current;
-			val_ret = parserAux(&partial, len);
+                        partial->last = tmp;
+			val_ret = parserAux(&partial, &tokList, len);
                         if (val_ret){
                                 free(partial);
                                 return val_ret;

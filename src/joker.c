@@ -10,10 +10,6 @@
 
 char *pattern;
 
-void expand_cmd(char *cmd){
-
-}
-
 int getExtremity(char **basePath, char **followPath, char **argv, int posArg){
         const char *delimiters = "/";
         char *tmp = malloc(strlen(argv[posArg]) + 1);
@@ -148,7 +144,7 @@ int verifFile(char *basePath, char *followPath, char *fileName){
         return -1;
 }
 
-int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg) {
+int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg, enum tokenType type) {
 
         char *basePath;
         char *followPath;
@@ -245,7 +241,7 @@ int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg)
                 i++;
         }
         token *newTok;
-        token *tmpTok;
+        token *tmpTok = NULL;
 
         for (int k = 0; k < nbFile; k++){
                 newTok = malloc(sizeof(token));
@@ -259,9 +255,27 @@ int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg)
                         return 1;
                 }
 
-                tmpTok = currentTok->next;
-                currentTok->next = newTok;
-                tmpTok->precedent = newTok;
+                if (type == ARG) {
+                        tmpTok = currentTok->next;
+                        currentTok->next = newTok;
+                        if (tmpTok == NULL)
+                                (*tokList)->last = newTok;
+                        else
+                                tmpTok->precedent = newTok;
+                        newTok->precedent = currentTok;
+                        newTok->next = tmpTok;
+                        newTok->type = ARG;
+                }else if (type == CMD){
+                        tmpTok = currentTok->precedent;
+                        if (tmpTok == NULL)
+                                (*tokList)->first = newTok;
+                        else
+                                tmpTok->next = newTok;
+                        currentTok->precedent = newTok;
+                        newTok->precedent = tmpTok;
+                        newTok->next = currentTok;
+                        newTok->type = CMD;
+                }
 
                 newTok->name = malloc(strlen(basePath) + strlen(filesRead[k]->d_name) + strlen(followPath) +1);
                 if (newTok->name == NULL){
@@ -280,14 +294,13 @@ int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg)
                 memmove(newTok->name + strlen(basePath) + strlen(filesRead[k]->d_name),
                         followPath, strlen(followPath) + 1);
 
-                newTok->precedent = currentTok;
-                newTok->next = tmpTok;
-                newTok->type = ARG;
-
                 currentTok = currentTok->next;
         }
-
-        freeToken(*tokList, currentTok->next);
+        tmpTok = NULL;
+        if (type == CMD && currentTok != NULL)
+                freeToken(*tokList, currentTok->precedent);
+        else if (currentTok != NULL)
+                freeToken(*tokList, currentTok->next);
         closedir(dir);
 
         free(pattern);

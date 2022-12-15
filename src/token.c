@@ -20,18 +20,15 @@ void freeToken(struct tokenList *tokList, token *current){
         if (tokList == NULL || current == NULL) return;
         token *last = current->precedent;
         token *next = current->next;
-        if (current->precedent != NULL){
+        if (last != NULL){
                 last->next = current->next;
         }
-        if (current->next != NULL){
+        if (next != NULL){
                 next->precedent = current->precedent;
         }
-        if (current == tokList->first && current == tokList->last) {
-                tokList->first = NULL;
-                tokList->last = NULL;
-        }else if (current == tokList->first)
+        if (current == tokList->first)
                 tokList->first = tokList->first->next;
-        else if (current == tokList->last)
+        if (current == tokList->last)
                 tokList->last = tokList->last->precedent;
         free(current->name);
         free(current);

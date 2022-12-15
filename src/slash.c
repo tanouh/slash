@@ -65,7 +65,6 @@ int main() {
 		print_err(NULL, MALLOC_ERR);
 		exit(1);
 	}
-        //lastWd = getenv("PWD");
 	memset(lastWd, 0x0, MAX_ARGS_STRLEN);
 	memmove(lastWd, getenv("PWD"), strlen(getenv("PWD")));
 	
@@ -75,6 +74,9 @@ int main() {
         int lenTokList;
         token *current;
         while ((buffer = readline(prompt)) != NULL) {
+                clearTokenList(toklist);
+                toklist->first = NULL;
+                toklist->last = NULL;
                 lenTokList = 0;
 
                 if (!strcmp(buffer, "")) continue;
@@ -91,18 +93,18 @@ int main() {
                 argCmd = malloc((lenTokList+1)*sizeof(char *));
                 if (argCmd == NULL){
                         print_err(NULL, MALLOC_ERR);
-                        clearTokenList(toklist);
                         break;
                 }
                 ret_val = parser(toklist, argCmd);
                 free(argCmd);
-                clearTokenList(toklist);
                 prompt = initialize_prompt(ret_val);
+                current = NULL;
         }
         free(buffer);
         rl_clear_history(); // à voir si ça ne pose pas problème
         free(prompt);
-        clearTokenList(toklist);
+        if (toklist->first != NULL)
+                clearTokenList(toklist);
         free(toklist);
 	free(lastWd);
 
