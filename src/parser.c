@@ -124,7 +124,10 @@ int parser(struct tokenList *tokList, char **argCmd){
                         partial->first = startCmd;
                         partial->last = current;
 			val_ret = parserAux(&partial, len);
-                        if (val_ret) return val_ret;
+                        if (val_ret){
+                                free(partial);
+                                return val_ret;
+                        }
                 }
                 if (current == NULL){
                         break;
