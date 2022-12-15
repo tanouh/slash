@@ -229,7 +229,7 @@ int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg)
                                 closedir(dir);
                                 return 1;
                         }
-                        if (!ret_val || ret_val == -1) {
+                        if (!ret_val) {
                                 filesRead[k] = file;
                                 k++;
                         }
