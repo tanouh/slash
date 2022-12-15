@@ -29,15 +29,6 @@ int parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int le
                 return 1;
         }
 
-        int (*fun)(int, char**) = NULL;
-        for (int i = 0; i < sizeof(tabFun)/sizeof(tabFun[0]); i++){
-                for (int j = 0; j < strlen(tabFun[i].cmdName); j++){
-                }
-                if (!strcmp(tabFun[i].cmdName,(*tokList)->first->name)){
-                        fun = tabFun[i].fun;
-                }
-        }
-
         token *current = (*tokList)->first;
         argv[0] = current->name;
 
@@ -101,6 +92,14 @@ int parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int le
                 }if (i != -1) current = current->next;
         }
 
+        int (*fun)(int, char**) = NULL;
+        for (int i = 0; i < sizeof(tabFun)/sizeof(tabFun[0]); i++){
+                for (int j = 0; j < strlen(tabFun[i].cmdName); j++){
+                }
+                if (!strcmp(tabFun[i].cmdName,(*tokList)->first->name)){
+                        fun = tabFun[i].fun;
+                }
+        }
 
 	if(fun == NULL){
 		return exec_external(len, argv);
