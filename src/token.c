@@ -11,10 +11,31 @@ struct tokenList *makeTokenList() {
 		print_err(NULL, MALLOC_ERR);
                 return NULL;
         }
-        tokList->len = 0;
         tokList->first = NULL;
         tokList->last = NULL;
         return tokList;
+}
+
+void freeToken(struct tokenList *tokList, token *current){
+        if (tokList == NULL || current == NULL) return;
+        token *last = current->precedent;
+        token *next = current->next;
+        if (current->precedent != NULL){
+                last->next = current->next;
+        }
+        if (current->next != NULL){
+                next->precedent = current->precedent;
+        }
+        if (current == tokList->first && current == tokList->last) {
+                tokList->first = NULL;
+                tokList->last = NULL;
+        }else if (current == tokList->first)
+                tokList->first = tokList->first->next;
+        else if (current == tokList->last)
+                tokList->last = tokList->last->precedent;
+        free(current->name);
+        free(current);
+        return;
 }
 
 int makeToken(struct tokenList *tokList, const char *name, enum tokenType tokType) {
@@ -40,7 +61,6 @@ int makeToken(struct tokenList *tokList, const char *name, enum tokenType tokTyp
                 tokList->last->next = tok;
         }
         tokList->last = tok;
-        tokList->len++;
         return 1;
 }
 
@@ -48,12 +68,12 @@ int makeToken(struct tokenList *tokList, const char *name, enum tokenType tokTyp
 //ajouter void *, sizeof (elt), fonction utilitaire pour nettoyer facilement, deplacer le pointeur de k-fois la
 //de l'element
 void clearTokenList(struct tokenList *tokList) {
+        if (tokList == NULL) return;
 	token * tmp = tokList->first;
         while (tokList->first != NULL) {
                 tmp = tokList->first->next;
-		if (tokList->first->name != NULL) free(tokList->first->name);
-		free(tokList->first);
+                if (tokList->first->name != NULL) free(tokList->first->name);
+                free(tokList->first);
                 tokList->first = tmp;
         }
-	tokList->len=0;
 }

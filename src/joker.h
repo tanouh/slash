@@ -8,6 +8,6 @@ int filter (const struct dirent *);
 
 void expand_cmd(char *cmd);
 
-int expand_path(char **argv, token **first, token **last, int posArg, int *nbArg);
+int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg) ;
 
 #endif //PROJET_SY5_JOKER_H

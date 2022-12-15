@@ -148,18 +148,15 @@ int verifFile(char *basePath, char *followPath, char *fileName){
         return -1;
 }
 
-int filter (const struct dirent *file){
-        return (file->d_name[0] != '.' &&
-                     !strcmp(pattern, file->d_name + (strlen(file->d_name) - strlen(pattern))));
-}
-
-
-int expand_path(char **argv, token **first, token **last, int posArg, int *nbArg) {
+int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg) {
 
         char *basePath;
         char *followPath;
         int basePathEmpty = getExtremity(&basePath, &followPath, argv, posArg);
-        if (basePathEmpty == -1) return 1;
+        if (basePathEmpty == -1)  {
+                free(pattern);
+                return 1;
+        }
 
         struct dirent *file;
         int nbFile = 0;
@@ -167,6 +164,7 @@ int expand_path(char **argv, token **first, token **last, int posArg, int *nbArg
         if(dir == NULL){
                 if (!basePathEmpty) free(basePath);
                 free(followPath);
+                free(pattern);
                 return -1;
         }
 
@@ -176,7 +174,13 @@ int expand_path(char **argv, token **first, token **last, int posArg, int *nbArg
                 if (file->d_name[0] != '.' &&
                     !strcmp(pattern, file->d_name + (strlen(file->d_name) - strlen(pattern)))) {
                         ret_val = verifFile(basePath, followPath, file->d_name);
-                        if (ret_val == 1) return 1;
+                        if (ret_val == 1)  {
+                                closedir(dir);
+                                free(pattern);
+                                if (!basePathEmpty) free(basePath);
+                                free(followPath);
+                                return 1;
+                        }
                         if (!ret_val) {
                                 argValid = 1;
                                 nbFile++;
@@ -185,20 +189,28 @@ int expand_path(char **argv, token **first, token **last, int posArg, int *nbArg
         }
         closedir(dir);
 
-        if (!argValid) return -1;
+        if (!argValid) {
+                free(pattern);
+                if (!basePathEmpty) free(basePath);
+                free(followPath);
+                return -1;
+        }
 
         dir = opendir(basePath);
         file = NULL;
         if(dir == NULL){
                 if (!basePathEmpty) free(basePath);
                 free(followPath);
+                free(pattern);
                 perror("Echec de l'ouverture du repertoire dir\n");
                 return -1;
         }
 
         struct dirent **filesRead = malloc(nbFile * sizeof (struct dirent));
         if(filesRead == NULL){
+                closedir(dir);
                 if (!basePathEmpty) free(basePath);
+                free(pattern);
                 free(followPath);
                 perror("Echec de l'allocation de memoire a filesRead\n");
                 return 1;
@@ -210,7 +222,11 @@ int expand_path(char **argv, token **first, token **last, int posArg, int *nbArg
                 !strcmp(pattern, file->d_name + (strlen(file->d_name) - strlen(pattern)))){
                         ret_val = verifFile(basePath, followPath, file->d_name);
                         if (ret_val == 1) {
-                                freeTab((void **)filesRead, nbFile);
+                                free(filesRead);
+                                free(pattern);
+                                if (!basePathEmpty) free(basePath);
+                                free(followPath);
+                                closedir(dir);
                                 return 1;
                         }
                         if (!ret_val || ret_val == -1) {
@@ -219,27 +235,26 @@ int expand_path(char **argv, token **first, token **last, int posArg, int *nbArg
                         }
                 }
         }
-        closedir(dir);
 
-        scandir(basePath, &filesRead, filter, alphasort);
         if (basePathEmpty) basePath = "";
 
         int i = 0;
-        token *currentTok = *first;
-        while (i < posArg-1 && currentTok->next != *last){
+        token *currentTok = (*tokList)->first;
+        while (i < posArg-1 && currentTok->next != (*tokList)->last){
                 currentTok = currentTok->next;
                 i++;
         }
         token *newTok;
         token *tmpTok;
 
-        for (k = 0; k < nbFile; k++){
+        for (int k = 0; k < nbFile; k++){
                 newTok = malloc(sizeof(token));
                 if (newTok == NULL){
                         free(pattern);
-                        freeTab((void **)filesRead, nbFile);
+                        free(filesRead);
                         if (!basePathEmpty) free(basePath);
                         free(followPath);
+                        closedir(dir);
                         perror("Echec de l'allocation de memoire a newTok\n");
                         return 1;
                 }
@@ -251,9 +266,10 @@ int expand_path(char **argv, token **first, token **last, int posArg, int *nbArg
                 newTok->name = malloc(strlen(basePath) + strlen(filesRead[k]->d_name) + strlen(followPath) +1);
                 if (newTok->name == NULL){
                         free(pattern);
-                        freeTab((void **)filesRead, nbFile);
+                        free(filesRead);
                         if (!basePathEmpty) free(basePath);
                         free(followPath);
+                        closedir(dir);
                         perror("Echec de l'allocation de memoire a newTok\n");
                         return 1;
                 }
@@ -271,26 +287,11 @@ int expand_path(char **argv, token **first, token **last, int posArg, int *nbArg
                 currentTok = currentTok->next;
         }
 
-        if (posArg + 1 == *nbArg) {
-                tmpTok = (*last)->next;
-                *last = (*last)->precedent;
-                (*last)->next = tmpTok;
-                if (tmpTok != NULL) {
-                        tmpTok->precedent = *last;
-                        free(tmpTok->name);
-                        free(tmpTok);
-                }
-        }else{
-                tmpTok = currentTok->next->next;
-                free(tmpTok->precedent->name);
-                free(tmpTok->precedent);
-                tmpTok->precedent = currentTok;
-                currentTok->next = tmpTok;
-        }
-
+        freeToken(*tokList, currentTok->next);
+        closedir(dir);
 
         free(pattern);
-        freeTab((void **)filesRead, nbFile);
+        free(filesRead);
         if (!basePathEmpty) free(basePath);
         free(followPath);
         *nbArg = *nbArg + nbFile - 1;

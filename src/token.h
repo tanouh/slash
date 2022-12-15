@@ -26,6 +26,8 @@ typedef struct tokenList{
 
 struct tokenList *makeTokenList();
 
+void freeToken(struct tokenList *tokList, token *current);
+
 int makeToken(struct tokenList *tokList, const char *name, enum tokenType tokType);
 
 void clearTokenList(struct tokenList *tokList);

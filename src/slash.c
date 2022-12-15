@@ -72,13 +72,23 @@ int main() {
 	char *buffer;
         char **argCmd;
 
+        int lenTokList;
+        token *current;
         while ((buffer = readline(prompt)) != NULL) {
+                lenTokList = 0;
+
                 if (!strcmp(buffer, "")) continue;
                 add_history(buffer);
                 free(prompt);
 		toklist = lex(buffer, toklist);
 		free(buffer);
-                argCmd = malloc((toklist->len+1)*sizeof(char *));
+
+                current = toklist->first;
+                while(current != NULL){
+                        lenTokList++;
+                        current = current->next;
+                }
+                argCmd = malloc((lenTokList+1)*sizeof(char *));
                 if (argCmd == NULL){
                         print_err(NULL, MALLOC_ERR);
                         clearTokenList(toklist);
@@ -89,9 +99,10 @@ int main() {
                 clearTokenList(toklist);
                 prompt = initialize_prompt(ret_val);
         }
-        rl_clear_history();
-	free(buffer); // à voir si ça ne pose pas problème
+        free(buffer);
+        rl_clear_history(); // à voir si ça ne pose pas problème
         free(prompt);
+        clearTokenList(toklist);
         free(toklist);
 	free(lastWd);
 

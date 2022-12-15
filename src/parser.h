@@ -7,7 +7,7 @@ typedef struct cmdFun{
     int (*fun)(int, char**);
 }cmdFun;
 
-int parserAux(token *first, token *last, int len);
+int parserAux(struct tokenList **tokList, int len);
 
 int parser(struct tokenList *tokList, char **argCmd);
 
