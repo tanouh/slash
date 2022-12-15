@@ -106,6 +106,6 @@ int main() {
         free(toklist);
 	free(lastWd);
 
-	write(STDERR_FILENO,"\n-slash terminate\n",20);
+	// write(STDERR_FILENO,"\n-slash terminate\n",20);
 	exit(ret_val);
 }

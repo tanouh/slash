@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 
 #include "external.h"
 #include "slasherr.h"
@@ -61,5 +62,5 @@ int exec_external(int argc, char **argv)
 	error:
 		free(args_list);
 		free(argv);
-		return 127;
+		exit(errno);
 }
