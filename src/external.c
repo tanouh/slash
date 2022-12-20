@@ -52,7 +52,11 @@ int exec_external(int argc, char **argv)
 		if (WIFEXITED(stat))
 		{
 			retval = WEXITSTATUS(stat);
-		}
+		} else if (WIFSIGNALED(stat)){
+            retval = 255;
+        } else if (WIFSTOPPED(stat)){
+            retval = 255;
+        }
 		wait(NULL);
 		free(args_list);
 	}

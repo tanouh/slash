@@ -43,13 +43,23 @@ char *initialize_prompt(int valret) {
                 return NULL;
         }
         char *pwd = getenv("PWD");
+        if (valret == 255){
+            if (strlen(pwd) + (SIZE_VALRET + 1) < SIZE_PROMPT) {
+                sprintf(string, "%s[%s]%s%s%s$ ", valret_color, "SIG", CYAN, pwd, BASIC);
+            } else {
+                char *reduction = pwd + strlen(pwd) + 8 - SIZE_PROMPT;
+                sprintf(string, "%s[%s]%s%s%s%s$ ", valret_color, "SIG", CYAN, "...", reduction, BASIC);
+            }
+            return string;
+        }
         if (strlen(pwd) + (SIZE_VALRET + 1) < SIZE_PROMPT) {
                 sprintf(string, "%s[%d]%s%s%s$ ", valret_color, valret, CYAN, pwd, BASIC);
         } else {
-                char *reduction = pwd + strlen(pwd) + 8 - SIZE_PROMPT;
-                sprintf(string, "%s[%d]%s%s%s%s$ ", valret_color, valret, CYAN, "...", reduction, BASIC);
+            char *reduction = pwd + strlen(pwd) + 8 - SIZE_PROMPT;
+            sprintf(string, "%s[%d]%s%s%s%s$ ", valret_color, valret, CYAN, "...", reduction, BASIC);
         }
-        return string;
+
+    return string;
 }
 
 
