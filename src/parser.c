@@ -42,7 +42,10 @@ int parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int le
         for (int i = 0; i < len; i++){
                 for (int j = 0; j < strlen(argv[i]); j++){
                         if (argv[i][j] == '*'){
-                                ret_val = expand_path(argv, tokList, i, &len, current->type);
+                                if (j+1 < strlen(argv[i]) && argv[i][j+1] == '*')
+                                        ret_val = expand_double(argv, tokList, i, &len, current->type);
+                                else
+                                        ret_val = expand_path(argv, tokList, i, &len, current->type);
                                 if (firstCmd) (*fullTokList)->first = (*tokList)->first;
                                 if (lastCmd) (*fullTokList)->last = (*tokList)->last;
                                 if (ret_val == 0){
@@ -76,9 +79,6 @@ int parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int le
                                          argv[0] = current->name;
 
                                          for (int i = 1; i < len; i++){
-                                                 if (current == NULL) perror("1111");
-                                                 if (argv[i] == NULL) perror("2222");
-                                                 if (current->name == NULL) perror("3333");
                                                  current = current->next;
                                                  argv[i] = current->name;
                                          }

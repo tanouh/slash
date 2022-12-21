@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <dirent.h>
 #include "token.h"
 #include "parser.h"
@@ -142,6 +144,50 @@ int verifFile(char *basePath, char *followPath, char *fileName){
         free(path);
         free(regex);
         return -1;
+}
+
+int openFile(char *path, DIR *dir, int depth){
+         char *basePath;
+        struct dirent *file;
+        DIR *tmpDir;
+        int notEmpty = 0;
+        while ((file = readdir(dir))){
+                if (!strcmp(file->d_name, "..") || !strcmp(file->d_name, ".")) continue;
+                struct stat* st = malloc(sizeof(struct stat));
+                if (st == NULL){
+                        perror("Echec de l'allocation de memoire a st\n");
+                        return -1;
+                }
+                basePath = malloc(strlen(path) + strlen(file->d_name) + 2);
+                if (basePath == NULL){
+                        perror("Echec de l'allocation de memoire a basePath\n");
+                        return -1;
+                }
+                memmove(basePath, path, strlen(path));
+                memset(basePath+strlen(path), '/', 1);
+                memmove(basePath + strlen(path) + 1, file->d_name, strlen(file->d_name) + 1);
+                int ret_val = stat(basePath, st);
+                if (ret_val == -1) {
+                        free(st);
+                        free(basePath);
+                        return -1;
+                }
+                if (S_ISDIR(st->st_mode)){
+                        notEmpty = 1;
+                        tmpDir = opendir(basePath);
+                        if (tmpDir == NULL){
+                                free(st);
+                                free(basePath);
+                                return -1;
+                        }
+                        ret_val = openFile(basePath, tmpDir, depth+1);
+                        closedir(tmpDir);
+                        if (ret_val > depth) depth = ret_val;
+                }
+                free(st);
+                free(basePath);
+        }
+        return depth;
 }
 
 int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg, enum tokenType type) {
@@ -308,5 +354,93 @@ int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg,
         if (!basePathEmpty) free(basePath);
         free(followPath);
         *nbArg = *nbArg + nbFile - 1;
+        return 0;
+}
+
+int expand_double(char **argv, struct tokenList **tokList, int posArg, int *nbArg, enum tokenType type){
+        char *basePath;
+        char *followPath;
+        int basePathEmpty = getExtremity(&basePath, &followPath, argv, posArg);
+        if (basePathEmpty == -1)  {
+                free(pattern);
+                return -1;
+        }
+
+        DIR *dir = opendir(basePath);
+        if(dir == NULL){
+                if (!basePathEmpty) free(basePath);
+                free(followPath);
+                free(pattern);
+                return -1;
+        }
+
+        int depth = openFile(basePath, dir, 0);
+        closedir(dir);
+
+        int i = 0;
+        token *currentTok = (*tokList)->first;
+        while (i < posArg-1 && currentTok->next != (*tokList)->last){
+                currentTok = currentTok->next;
+                i++;
+        }
+
+        token *newTok;
+        token *tmpTok;
+        for (i = 0; i < depth; i++){
+                newTok = malloc(sizeof(token));
+                if (newTok == NULL){
+                        if (!basePathEmpty) free(basePath);
+                        free(followPath);
+                        free(pattern);
+                        perror("Echec de l'allocation de memoire a newTok\n");
+                        return -1;
+                }
+                if (type == ARG) {
+                        tmpTok = currentTok->next;
+                        currentTok->next = newTok;
+                        if (tmpTok == NULL)
+                                (*tokList)->last = newTok;
+                        else
+                                tmpTok->precedent = newTok;
+                        newTok->precedent = currentTok;
+                        newTok->next = tmpTok;
+                        newTok->type = ARG;
+                }else if (type == CMD){
+                        tmpTok = currentTok->precedent;
+                        if (tmpTok == NULL)
+                                (*tokList)->first = newTok;
+                        else
+                                tmpTok->next = newTok;
+                        currentTok->precedent = newTok;
+                        newTok->precedent = tmpTok;
+                        newTok->next = currentTok;
+                        newTok->type = CMD;
+                }
+
+                newTok->name = malloc(strlen(basePath) + (2*i) + strlen(followPath) + 1);
+                if (newTok->name == NULL){
+                        free(newTok);
+                        if (!basePathEmpty) free(basePath);
+                        free(followPath);
+                        free(pattern);
+                        perror("Echec de l'allocation de memoire a newTok->name\n");
+                        return -1;
+                }
+                memmove(newTok->name, basePath, strlen(basePath));
+                for (int j = 0; j < i; j++){
+                        memmove(newTok->name + strlen(basePath) + j*2, "/*", 2);
+                }
+                memmove(newTok->name + strlen(basePath) + i*2, followPath, strlen(followPath) + 1);
+                currentTok = currentTok->next;
+
+        }
+        if (type == CMD && currentTok != NULL)
+                freeToken(*tokList, currentTok->precedent);
+        else if (currentTok != NULL)
+                freeToken(*tokList, currentTok->next);
+        *nbArg = *nbArg + depth - 1;
+        if (!basePathEmpty) free(basePath);
+        free(followPath);
+        free(pattern);
         return 0;
 }
