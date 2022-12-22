@@ -384,9 +384,11 @@ int expand_double(char **argv, struct tokenList **tokList, int posArg, int *nbAr
                 i++;
         }
 
+        if (basePathEmpty) basePath = "";
+
         token *newTok;
         token *tmpTok;
-        for (i = 0; i < depth; i++){
+        for (i = 1; i <= depth; i++){
                 newTok = malloc(sizeof(token));
                 if (newTok == NULL){
                         if (!basePathEmpty) free(basePath);
@@ -417,7 +419,7 @@ int expand_double(char **argv, struct tokenList **tokList, int posArg, int *nbAr
                         newTok->type = CMD;
                 }
 
-                newTok->name = malloc(strlen(basePath) + (2*i) + strlen(followPath) + 1);
+                newTok->name = malloc(strlen(basePath) + (2*i) - basePathEmpty + strlen(followPath) + 1);
                 if (newTok->name == NULL){
                         free(newTok);
                         if (!basePathEmpty) free(basePath);
@@ -428,9 +430,13 @@ int expand_double(char **argv, struct tokenList **tokList, int posArg, int *nbAr
                 }
                 memmove(newTok->name, basePath, strlen(basePath));
                 for (int j = 0; j < i; j++){
-                        memmove(newTok->name + strlen(basePath) + j*2, "/*", 2);
+                        if (basePathEmpty && j == 0)
+                                memmove(newTok->name, "*", 1);
+                        else{
+                                memmove(newTok->name + strlen(basePath) + j * 2 - basePathEmpty, "/*", 2);
+                        }
                 }
-                memmove(newTok->name + strlen(basePath) + i*2, followPath, strlen(followPath) + 1);
+                memmove(newTok->name + strlen(basePath) + i*2 - basePathEmpty, followPath, strlen(followPath) + 1);
                 currentTok = currentTok->next;
 
         }
