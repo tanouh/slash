@@ -39,8 +39,9 @@ int parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int le
 
         int ret_val;
         current = (*tokList)->first;
-        for (int i = 0; i < len; i++){
-                for (int j = 0; j < strlen(argv[i]); j++){
+        for (int i = 0; i < len; i++){ // Parcours des arguments 
+
+                for (int j = 0; j < strlen(argv[i]); j++){ // Parcours d'un argument
                         if (argv[i][j] == '*'){
                                 if (j+1 < strlen(argv[i]) && argv[i][j+1] == '*')
                                         ret_val = expand_double(argv, tokList, i, &len, current->type);
@@ -48,7 +49,8 @@ int parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int le
                                         ret_val = expand_path(argv, tokList, i, &len, current->type);
                                 if (firstCmd) (*fullTokList)->first = (*tokList)->first;
                                 if (lastCmd) (*fullTokList)->last = (*tokList)->last;
-                                if (ret_val == 0){
+                                
+				if (ret_val == 0){
                                          argv = realloc(argv, len*sizeof (char *));
                                          if (argv == NULL) {
                                                  print_err(NULL, MALLOC_ERR);
@@ -89,17 +91,21 @@ int parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int le
                                  }
                                  else return 1;
                         }
-                }if (i != -1) current = current->next;
+                }
+		
+		if (i != -1) current = current->next;
         }
 
         int (*fun)(int, char**) = NULL;
         for (int i = 0; i < sizeof(tabFun)/sizeof(tabFun[0]); i++){
-                for (int j = 0; j < strlen(tabFun[i].cmdName); j++){
-                }
                 if (!strcmp(tabFun[i].cmdName,(*tokList)->first->name)){
                         fun = tabFun[i].fun;
                 }
         }
+
+	/**
+	 * traiter les redirections ici 
+	*/
 
 	if(fun == NULL){
 		return exec_external(len, argv);
@@ -110,6 +116,8 @@ int parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int le
 
 
 int parser(struct tokenList *tokList, char **argCmd){
+	
+
         token *current = tokList->first;
         if (current->type != CMD) return 1;
         token *startCmd = tokList->first;
@@ -122,7 +130,7 @@ int parser(struct tokenList *tokList, char **argCmd){
                         len = 1;
                         *startCmd = *current;
                 }
-                if (current->next == NULL || current->next->type == CMD) {
+                if (current->next == NULL || current->next->type == PIPE) {
                         tmp = current;
                         current = current->next;
                         while(partial->first != NULL)
@@ -135,6 +143,7 @@ int parser(struct tokenList *tokList, char **argCmd){
                                 return val_ret;
                         }
                 }
+
                 if (current == NULL){
                         break;
                 }

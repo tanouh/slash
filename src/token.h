@@ -10,9 +10,21 @@ enum tokenType{
     REDIRECT
 };
 
+enum redirection{
+	STDIN,
+	STDOUT,
+	STDERR,
+	STDOUT_TRUNC,
+	STDOUT_APPEND,
+	STDERR_TRUNC,
+	STDERR_APPEND,
+	NO_REDIR
+};
+
 typedef struct token{
     char *name;
     enum tokenType type;
+    enum redirection redir_type; 
     struct token *precedent;
     struct token *next;
 } token;
@@ -28,7 +40,7 @@ struct tokenList *makeTokenList();
 
 void freeToken(struct tokenList *tokList, token *current);
 
-int makeToken(struct tokenList *tokList, const char *name, enum tokenType tokType);
+int makeToken(struct tokenList *tokList, const char *name, enum tokenType tokType, enum redirection redir_type);
 
 void clearTokenList(struct tokenList *tokList);
 

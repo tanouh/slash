@@ -35,7 +35,7 @@ void freeToken(struct tokenList *tokList, token *current){
         return;
 }
 
-int makeToken(struct tokenList *tokList, const char *name, enum tokenType tokType) {
+int makeToken(struct tokenList *tokList, const char *name, enum tokenType tokType, enum redirection redir_type) {
         token *tok = malloc(sizeof(token));
         if (tok == NULL) {
                 print_err(NULL, MALLOC_ERR);
@@ -49,6 +49,7 @@ int makeToken(struct tokenList *tokList, const char *name, enum tokenType tokTyp
         }
         strcpy(tok->name, name);
         tok->type = tokType;
+	tok->redir_type = redir_type;
         tok->precedent = tokList->last;
         tok->next = NULL;
         if (tokList->first == NULL) {
