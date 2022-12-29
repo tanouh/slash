@@ -170,7 +170,7 @@ int openFile(char *path, DIR *dir, int depth){
                 memset(basePath+strlen(path), '/', 1);
                 memmove(basePath + strlen(path) + 1, file->d_name, strlen(file->d_name) + 1);
 
-                int ret_val = stat(basePath, st);
+                int ret_val = lstat(basePath, st);
                 if (ret_val == -1) {
                         free(st);
                         free(basePath);
