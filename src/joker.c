@@ -150,14 +150,16 @@ int openFile(char *path, DIR *dir, int depth){
          char *basePath;
         struct dirent *file;
         DIR *tmpDir;
-        int notEmpty = 0;
+        int maxDepth = depth;
         while ((file = readdir(dir))){
                 if (!strcmp(file->d_name, "..") || !strcmp(file->d_name, ".")) continue;
+
                 struct stat* st = malloc(sizeof(struct stat));
                 if (st == NULL){
                         perror("Echec de l'allocation de memoire a st\n");
                         return -1;
                 }
+
                 basePath = malloc(strlen(path) + strlen(file->d_name) + 2);
                 if (basePath == NULL){
                         perror("Echec de l'allocation de memoire a basePath\n");
@@ -166,14 +168,15 @@ int openFile(char *path, DIR *dir, int depth){
                 memmove(basePath, path, strlen(path));
                 memset(basePath+strlen(path), '/', 1);
                 memmove(basePath + strlen(path) + 1, file->d_name, strlen(file->d_name) + 1);
-                int ret_val = stat(basePath, st);
+
+                int ret_val = lstat(basePath, st);
                 if (ret_val == -1) {
                         free(st);
                         free(basePath);
                         return -1;
                 }
+
                 if (S_ISDIR(st->st_mode)){
-                        notEmpty = 1;
                         tmpDir = opendir(basePath);
                         if (tmpDir == NULL){
                                 free(st);
@@ -182,12 +185,12 @@ int openFile(char *path, DIR *dir, int depth){
                         }
                         ret_val = openFile(basePath, tmpDir, depth+1);
                         closedir(tmpDir);
-                        if (ret_val > depth) depth = ret_val;
+                        if (ret_val > maxDepth) maxDepth = ret_val;
                 }
                 free(st);
                 free(basePath);
         }
-        return depth;
+        return maxDepth;
 }
 
 int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg, enum tokenType type) {
@@ -374,7 +377,7 @@ int expand_double(char **argv, struct tokenList **tokList, int posArg, int *nbAr
                 return -1;
         }
 
-        int depth = openFile(basePath, dir, 0);
+        int depth = openFile(basePath, dir, 1);
         closedir(dir);
 
         int i = 0;
@@ -384,11 +387,15 @@ int expand_double(char **argv, struct tokenList **tokList, int posArg, int *nbAr
                 i++;
         }
 
+        if (basePathEmpty) basePath = "";
+
         token *newTok;
         token *tmpTok;
-        for (i = 0; i < depth; i++){
+        for (i = 0; i <= depth; i++) {
+                if (strlen(followPath) == 0 && i == 0) continue;
+
                 newTok = malloc(sizeof(token));
-                if (newTok == NULL){
+                if (newTok == NULL) {
                         if (!basePathEmpty) free(basePath);
                         free(followPath);
                         free(pattern);
@@ -405,7 +412,7 @@ int expand_double(char **argv, struct tokenList **tokList, int posArg, int *nbAr
                         newTok->precedent = currentTok;
                         newTok->next = tmpTok;
                         newTok->type = ARG;
-                }else if (type == CMD){
+                } else if (type == CMD) {
                         tmpTok = currentTok->precedent;
                         if (tmpTok == NULL)
                                 (*tokList)->first = newTok;
@@ -417,8 +424,8 @@ int expand_double(char **argv, struct tokenList **tokList, int posArg, int *nbAr
                         newTok->type = CMD;
                 }
 
-                newTok->name = malloc(strlen(basePath) + (2*i) + strlen(followPath) + 1);
-                if (newTok->name == NULL){
+                newTok->name = malloc((2 * i) - 1 + strlen(followPath) + 1);
+                if (newTok->name == NULL) {
                         free(newTok);
                         if (!basePathEmpty) free(basePath);
                         free(followPath);
@@ -426,19 +433,32 @@ int expand_double(char **argv, struct tokenList **tokList, int posArg, int *nbAr
                         perror("Echec de l'allocation de memoire a newTok->name\n");
                         return -1;
                 }
-                memmove(newTok->name, basePath, strlen(basePath));
-                for (int j = 0; j < i; j++){
-                        memmove(newTok->name + strlen(basePath) + j*2, "/*", 2);
+                for (int j = 0; j < i; j++) {
+                        if (j == 0)
+                                memmove(newTok->name, "*", 1);
+                        else {
+                                memmove(newTok->name + j * 2 - 1 , "/*", 2);
+                        }
                 }
-                memmove(newTok->name + strlen(basePath) + i*2, followPath, strlen(followPath) + 1);
+                if (i == 0)
+                        memmove(newTok->name, followPath + 1, strlen(followPath));
+                else
+                        memmove(newTok->name + i * 2 - 1, followPath, strlen(followPath) + 1);
                 currentTok = currentTok->next;
+                if (!(strcmp(newTok->name, ""))) {
+                        tmpTok = currentTok->precedent;
+                        freeToken(*tokList, currentTok);
+                        currentTok = tmpTok;
+                }
 
         }
         if (type == CMD && currentTok != NULL)
                 freeToken(*tokList, currentTok->precedent);
         else if (currentTok != NULL)
                 freeToken(*tokList, currentTok->next);
-        *nbArg = *nbArg + depth - 1;
+        *nbArg = *nbArg + depth;
+        if (!strcmp(followPath, "") && basePathEmpty)
+                *nbArg = *nbArg -1;
         if (!basePathEmpty) free(basePath);
         free(followPath);
         free(pattern);
