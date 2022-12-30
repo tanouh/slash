@@ -14,7 +14,7 @@
  * (does not include the name of the command)
  * @return 0 if succes, 1 if error
  */
-int exec_cd(int argc, char **argv);
+int exec_cd(int fdin, int fdout, int fderr, int argc, char **argv);
 
 int cd(char* path, int physical);
 

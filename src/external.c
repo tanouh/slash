@@ -7,6 +7,7 @@
 
 #include "external.h"
 #include "slasherr.h"
+#include "redirection.h"
 
 char **formate_args(int argc, char **argv)
 {
@@ -23,7 +24,7 @@ char **formate_args(int argc, char **argv)
 	return arg_list;
 }
 
-int exec_external(int argc, char **argv)
+int exec_external(int fdin, int fdout, int fderr, int argc, char **argv)
 {
 	if (argc < 0)
 	{
@@ -37,28 +38,33 @@ int exec_external(int argc, char **argv)
 	int retval = 0;
 	switch (proc)
 	{
-	case -1:
-		goto error;
-	case 0:
-		dup2(STDOUT_FILENO, STDOUT_FILENO);
-		int status = execvp(argv[0], args_list);
-		if (status == -1)
-		{
-			print_err(argv[0], "command not found");
+		case -1:
 			goto error;
-		}
-	default:
-		waitpid(proc, &stat, 0);
-		if (WIFEXITED(stat))
-		{
-			retval = WEXITSTATUS(stat);
-		} else if (WIFSIGNALED(stat)){
-            retval = 255;
-        } else if (WIFSTOPPED(stat)){
-            retval = 255;
-        }
-		wait(NULL);
-		free(args_list);
+		case 0:
+			
+			redirect(fdin,STDIN_FILENO); /*REDIR*/
+			redirect(fdout,STDOUT_FILENO);
+			redirect(fderr, STDERR_FILENO);
+
+			int status = execvp(argv[0], args_list);
+			if (status == -1)
+			{
+				print_err(argv[0], "command not found");
+				goto error;
+			}
+		default:
+			waitpid(proc, &stat, 0);
+			if (WIFEXITED(stat))
+			{
+				retval = WEXITSTATUS(stat);
+			} else if (WIFSIGNALED(stat)){
+				retval = 255;
+			} else if (WIFSTOPPED(stat)){
+				retval = 255;
+			}
+
+			wait(NULL);
+			free(args_list);
 	}
 	free(argv);
 	return retval;

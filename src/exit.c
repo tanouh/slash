@@ -27,7 +27,7 @@ int is_a_number(char * string, int s_len){
 	return 1;
 }
 
-int exec_exit(int argc, char **argv){
+int exec_exit(int fdin, int fdout, int fderr, int argc, char **argv){
 	if (argc > 2 || argc < 1 || (argc > 1 && is_a_number(argv[1], strlen(argv[1])) == 0 )) {
 
                 free(argv);

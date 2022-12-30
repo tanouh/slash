@@ -10,7 +10,7 @@
 TODO : Pour le jalon 2 : tester que l'élément avant n'est pas un | pcq sinon le token serait une commande
 */
 
-int lex_one(char * value, tokenList * tokList)
+int lex_one(char * value, tokenList * tokList , int * n_pipes ) /*PIPES*/
 {
 	enum tokenType type = REDIRECT;
 	enum redirection redir_type = NO_REDIR;
@@ -23,6 +23,7 @@ int lex_one(char * value, tokenList * tokList)
 			break;
 		case '|':
 			type = PIPE;
+			*n_pipes++; 
 			break;			
 		default : 
 			type = ARG;
@@ -46,11 +47,16 @@ int lex_two(char * value, tokenList * tokList)
 					break;
 				default : 
 					type = ARG; 
+					break;
 			}
 			break;
 		case '2':
-			type = (value[1] == '>')? ARG : REDIRECT;
-			redir_type = STDERR;
+			if(value[1] == '>'){
+				type = REDIRECT ;
+				redir_type = STDERR;
+			}else{
+				type = ARG;
+			}
 			break ; 
 			// return makeToken(tokList, value, type,redir_type);
 		default: 
@@ -66,14 +72,14 @@ int lex_three(char * value, tokenList * tokList)
 	
 	enum tokenType type = REDIRECT;
 	enum redirection redir_type = NO_REDIR;
-	if(value[1]=='2'){
-		if(value[2]== '>'){
+	if(value[0]=='2'){
+		if(value[1]== '>'){
 			switch(value[2]){
 			case '>':
-				redir_type = STDERR_TRUNC;
+				redir_type = STDERR_APPEND;
 				break;
 			case '|': 
-				redir_type = STDERR_APPEND;
+				redir_type = STDERR_TRUNC;
 				break;
 			default : 
 				type = ARG;
@@ -89,14 +95,14 @@ int lex_three(char * value, tokenList * tokList)
 	return makeToken(tokList,value,type, redir_type);
 }
 
-struct tokenList *lex (char *input, tokenList *tokList){
+struct tokenList *lex (char *input, tokenList *tokList, int * n_pipes){
 	int val_ret = 0;
 	const char *delimiters = " ";
 	char *tmp = malloc(strlen(input) +1);
 
 	if (tmp == NULL)
 	{
-		print_err(NULL,  MALLOC_ERR);
+		print_err(NULL,  MALLOC_ERR); 
 		return NULL;
 	}
 	
@@ -108,14 +114,14 @@ struct tokenList *lex (char *input, tokenList *tokList){
 		return NULL;
 	}
 	
-	makeToken(tokList, tokenStr, CMD,NO_REDIR);
+	makeToken(tokList, tokenStr, CMD, NO_REDIR);
 	tokenStr = strtok (NULL, delimiters);
 	
 	while (tokenStr != NULL ) 
 	{
 		switch(strlen(tokenStr)){
 			case 1:
-				val_ret = lex_one(tokenStr,tokList);
+				val_ret = lex_one(tokenStr,tokList, n_pipes);
 				break;
 			case 2:
 				val_ret = lex_two(tokenStr,tokList);

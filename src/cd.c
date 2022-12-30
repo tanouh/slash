@@ -12,7 +12,7 @@
 #include "slash.h"
 #include "slasherr.h"
 
-int exec_cd(int argc, char *argv[])
+int exec_cd(int fdin, int fdout, int fderr, int argc, char *argv[])
 {
 	if (argc == 1)
 	{

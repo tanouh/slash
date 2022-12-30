@@ -2,9 +2,9 @@
 #define PROJET_SY5_LEXER_H
 
 #include "token.h"
-int lex_one(char *input, struct tokenList *tokList);
+int lex_one(char *input, struct tokenList *tokList, int * n_pipes); /*PIPES*/
 int lex_two(char *input, struct tokenList *tokList);
 int lex_three(char *input, struct tokenList *tokList);
-struct tokenList *lex(char *input, struct tokenList *tokList);
+struct tokenList *lex(char *input, struct tokenList *tokList, int *n_pipes); /*PIPES*/
 
 #endif //PROJET_SY5_LEXER_H

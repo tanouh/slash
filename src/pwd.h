@@ -3,7 +3,7 @@
 
 #define PHYS_PATH_LEN 512
 
-int exec_pwd(int argc, char *argv[]);
+int exec_pwd(int fdin, int fdout, int fderr, int argc, char *argv[]);
 
 int pwdL(int fdout);
 

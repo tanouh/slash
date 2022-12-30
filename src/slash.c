@@ -82,6 +82,9 @@ int main() {
         char **argCmd;
 
         int lenTokList;
+
+	int n_pipes = 0 ; /*PIPES*/
+
         token *current;
         while ((buffer = readline(prompt)) != NULL) {
                 clearTokenList(toklist);
@@ -92,7 +95,9 @@ int main() {
                 if (!strcmp(buffer, "")) continue;
                 add_history(buffer);
                 free(prompt);
-		toklist = lex(buffer, toklist);
+		
+		toklist = lex(buffer, toklist, &n_pipes); /*PIPES*/
+ 
 		free(buffer);
 
                 current = toklist->first;
@@ -105,10 +110,14 @@ int main() {
                         print_err(NULL, MALLOC_ERR);
                         break;
                 }
-                ret_val = parser(toklist, argCmd);
-                free(argCmd);
+
+                ret_val = parser(toklist, argCmd, n_pipes); /*PIPES*/
+                
+		free(argCmd);
                 prompt = initialize_prompt(ret_val);
                 current = NULL;
+
+		n_pipes = 0 ; /*PIPES*/
         }
         free(buffer);
         rl_clear_history(); // à voir si ça ne pose pas problème
