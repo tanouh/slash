@@ -19,25 +19,34 @@ static struct cmdFun tabFun[] = {
         { "pwd", exec_pwd },
         { "exit", exec_exit },
 };
-// int parserRedir(struct tokenList **tokList, int len, int *fdin, int *fdout, int *fderr, char ** argv){
 
+int parserRedir(struct tokenList **tokList, int len, int *fdin, int *fdout, int *fderr, char ** argv){
+	token *current = (*tokList)->first;
+	//if(current -> type != REDIRECT)
+        argv[0] = current->name;
+	int k =1;
+        for (int i = 1; i < len; i++){
+		/* Ne pas mettre les redirections dans argv */ 
+		current = current->next;
+		if(current->type == REDIRECT) break;
+		argv[i] = current->name; 
+		k++;   
+        }
+	int (*fun)(int, int, int, int, char**) = NULL;
+        for (int i = 0; i < sizeof(tabFun)/sizeof(tabFun[0]); i++){
+                if (!strcmp(tabFun[i].cmdName,(*tokList)->first->name)){
+                        fun = tabFun[i].fun;
+                }
+        }
+	int ret_val = compute_redirection(fdin,fdout, fderr, tokList);
+	if(ret_val != 0) return 1;
 
-// 	int (*fun)(int, int, int, int, char**) = NULL;
-//         for (int i = 0; i < sizeof(tabFun)/sizeof(tabFun[0]); i++){
-//                 if (!strcmp(tabFun[i].cmdName,(*tokList)->first->name)){
-//                         fun = tabFun[i].fun;
-//                 }
-//         }
-
-// 	ret_val = compute_redirection(fdin,fdout, fderr, tokList);
-// 	if(ret_val != 0) return 1;
-
-// 	if(fun == NULL){
-// 		return exec_external(*fdin,*fdout, *fderr, len, argv);
-// 	}else{
-// 		return fun(*fdin, *fdout, *fderr, k, argv);
-// 	}
-// }
+	if(fun == NULL){
+		return exec_external(*fdin,*fdout, *fderr, k, argv);
+	}else{
+		return fun(*fdin, *fdout, *fderr, k, argv);
+	}
+}
 
 int parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int len, int * fdin, int * fdout, int * fderr, int *pipefds, int n_pipes){
 
@@ -53,15 +62,10 @@ int parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int le
 
         token *current = (*tokList)->first;
 
-	//if(current -> type != REDIRECT)
         argv[0] = current->name;
-	int k =1;
         for (int i = 1; i < len; i++){
-		/* Ne pas mettre les redirections dans argv */ 
 		current = current->next;
-		if(current->type == REDIRECT) break;
 		argv[i] = current->name; 
-		k++;   
         }
 
         int ret_val;
@@ -70,9 +74,7 @@ int parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int le
 
 		if (!argv[i]) continue;
 		for (int j = 0; j < strlen(argv[i]); j++){ // Parcours d'un argument
-                        //printf("DANS LA BOUUUUUUCLE\n");
 			if (argv[i][j] == '*'){
-				//printf("HERRRRRRRRE\n");
                                 if (j+1 < strlen(argv[i]) && argv[i][j+1] == '*')
                                         ret_val = expand_double(argv, tokList, i, &len, current->type);
                                 else
@@ -127,21 +129,7 @@ int parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int le
 		if (i != -1) current = current->next;
         }
 
-        int (*fun)(int, int, int, int, char**) = NULL;
-        for (int i = 0; i < sizeof(tabFun)/sizeof(tabFun[0]); i++){
-                if (!strcmp(tabFun[i].cmdName,(*tokList)->first->name)){
-                        fun = tabFun[i].fun;
-                }
-        }
-
-	ret_val = compute_redirection(fdin,fdout, fderr, tokList);
-	if(ret_val != 0) return 1;
-
-	if(fun == NULL){
-		return exec_external(*fdin,*fdout, *fderr, len, argv);
-	}else{
-		return fun(*fdin, *fdout, *fderr, k, argv);
-	}
+	return parserRedir(tokList, len,fdin, fdout,fderr,argv);
 }
 
 /**

@@ -16,6 +16,7 @@ int compute_redirection(int *fdin, int * fdout, int *fderr, struct tokenList ** 
 		if (current->type == REDIRECT){
 			if(current->next){
 				token * file = current -> next;
+				
 				if(file -> type == ARG){
 					switch (current->redir_type) {
 						case STDIN : 
