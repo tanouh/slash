@@ -600,7 +600,7 @@ int expand_double(char **argv, struct tokenList **tokList, int posArg, int *nbAr
         else if (currentTok != NULL)
                 freeToken(*tokList, currentTok->next);
         *nbArg = *nbArg + depth;
-        if (!strcmp(followPath, "/") && basePathEmpty)
+        if ((!strcmp(followPath, "/") || !strcmp(followPath, "")) && basePathEmpty)
                 *nbArg = *nbArg -1;
         if (!basePathEmpty) free(basePath);
         free(followPath);
