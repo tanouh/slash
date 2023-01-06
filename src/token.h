@@ -29,6 +29,7 @@ typedef struct token{
     struct token *next;
     int nbEtoileFrom2;
     int nbEtoileNom;
+    int currentEtoileNom;
 } token;
 
 typedef struct tokenList{

@@ -2,7 +2,7 @@
 #define PROJET_SY5_JOKER_H
 #include <dirent.h>
 
-int getExtremity(char **basePath, char **followPath, char **argv, int posArg);
+int getExtremity(char **basePath, char **followPath, token *current);
 
 int verifFile(char *basePath, char *followPath, char *fileName, token *current);
 

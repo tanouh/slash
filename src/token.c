@@ -51,6 +51,7 @@ int makeToken(struct tokenList *tokList, const char *name, enum tokenType tokTyp
         tok->type = tokType;
         tok->nbEtoileFrom2 = 0;
         tok->nbEtoileNom = 0;
+        tok->currentEtoileNom = 0;
 	tok->redir_type = redir_type;
         tok->precedent = tokList->last;
         tok->next = NULL;
