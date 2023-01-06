@@ -27,6 +27,8 @@ typedef struct token{
     enum redirection redir_type; 
     struct token *precedent;
     struct token *next;
+    int nbEtoileFrom2;
+    int nbEtoileNom;
 } token;
 
 typedef struct tokenList{

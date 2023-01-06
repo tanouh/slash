@@ -82,56 +82,56 @@ int getExtremity(char **basePath, char **followPath, char **argv, int posArg){
         return 0;
 }
 
-int verifFile(char *basePath, char *followPath, char *fileName){
-
+int verifFile(char *basePath, char *followPath, char *fileName, token *current){
         if (!strcmp(basePath, ".")) basePath = "./";
         if (!strcmp(followPath, "/")) {
                 followPathEmpty = 1;
                 followPath = "";
         }
         else followPathEmpty = 0;
+
+        char *pathFile = malloc(strlen(basePath) + strlen(fileName) + 1);
+        if (pathFile == NULL){
+                perror("Echec de l'allocation de memoire a pathFile\n");
+                if (followPathEmpty) followPath = "/";
+                return 1;
+        }
+        memmove(pathFile, basePath, strlen(basePath));
+        memmove(pathFile + strlen(basePath), fileName, strlen(fileName) + 1);
+
+
+        struct stat *st = malloc(sizeof(struct stat));
+        if (st == NULL) {
+                free(pathFile);
+                if (followPathEmpty) followPath = "/";
+                perror("Echec de l'allocation de memoire a st\n");
+                return -1;
+        }
+        int ret_val = lstat(pathFile, st);
+        if (ret_val == -1) {
+                free(pathFile);
+                if (followPathEmpty) followPath = "/";
+                free(st);
+                return -1;
+        }
+
+        if ((current->nbEtoileFrom2 > 0 && S_ISLNK(st->st_mode)) ||
+                (!S_ISDIR(st->st_mode) && !S_ISLNK(st->st_mode)
+                && (strcmp(followPath, "") || followPathEmpty ))){
+
+                free(pathFile);
+                if (followPathEmpty) followPath = "/";
+                free(st);
+                return -1;
+        }
+        free(st);
+        free(pathFile);
+
         for (int i = 0; i < strlen(followPath); i++){
                 if (followPath[i] == '*') {
                         if (followPathEmpty) followPath = "/";
                         return 0;
                 }
-        }
-
-        if (strcmp(followPath, "") || followPathEmpty) {
-
-                char *pathFile = malloc(strlen(basePath) + strlen(fileName) + 1);
-                if (pathFile == NULL){
-                        perror("Echec de l'allocation de memoire a pathFile\n");
-                        if (followPathEmpty) followPath = "/";
-                        return 1;
-                }
-                memmove(pathFile, basePath, strlen(basePath));
-                memmove(pathFile + strlen(basePath), fileName, strlen(fileName) + 1);
-
-
-                struct stat *st = malloc(sizeof(struct stat));
-                if (st == NULL) {
-                        free(pathFile);
-                        if (followPathEmpty) followPath = "/";
-                        perror("Echec de l'allocation de memoire a st\n");
-                        return -1;
-                }
-                int ret_val = lstat(pathFile, st);
-                if (ret_val == -1) {
-                        free(pathFile);
-                        if (followPathEmpty) followPath = "/";
-                        free(st);
-                        return -1;
-                }
-                if (!S_ISDIR(st->st_mode)) {
-                        free(pathFile);
-                        if (followPathEmpty) followPath = "/";
-                        free(st);
-                        return -1;
-                }
-                free(st);
-                free(pathFile);
-
         }
 
         char *path = malloc(strlen(basePath) + strlen(fileName) + strlen(followPath) + 1);
@@ -273,6 +273,13 @@ int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg,
                 return -1;
         }
 
+        int i = 0;
+        token *currentTok = (*tokList)->first;
+        while (i < posArg){
+                currentTok = currentTok->next;
+                i++;
+        }
+
         struct dirent *file;
         int nbFile = 0;
         DIR *dir = opendir(basePath);
@@ -288,7 +295,7 @@ int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg,
         while((file = readdir(dir))) {
                 if (file->d_name[0] != '.' &&
                     !strcmp(pattern, file->d_name + (strlen(file->d_name) - strlen(pattern)))) {
-                        ret_val = verifFile(basePath, followPath, file->d_name);
+                        ret_val = verifFile(basePath, followPath, file->d_name, currentTok);
                         if (ret_val == 1)  {
                                 closedir(dir);
                                 free(pattern);
@@ -335,7 +342,7 @@ int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg,
         while((file = readdir(dir))){
                 if (file->d_name[0] != '.' &&
                 !strcmp(pattern, file->d_name + (strlen(file->d_name) - strlen(pattern)))){
-                        ret_val = verifFile(basePath, followPath, file->d_name);
+                        ret_val = verifFile(basePath, followPath, file->d_name, currentTok);
                         if (ret_val == 1) {
                                 free(filesRead);
                                 free(pattern);
@@ -353,12 +360,17 @@ int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg,
 
         if (basePathEmpty) basePath = "";
 
-        int i = 0;
-        token *currentTok = (*tokList)->first;
+        i = 0;
+        currentTok = (*tokList)->first;
         while (i < posArg-1 && currentTok->next != (*tokList)->last){
                 currentTok = currentTok->next;
                 i++;
         }
+        int nbEtoileFrom2 = 0;
+        if (currentTok->next != NULL)
+                nbEtoileFrom2 = currentTok->next->nbEtoileFrom2;
+
+
         token *newTok;
         token *tmpTok = NULL;
 
@@ -412,9 +424,11 @@ int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg,
                         filesRead[k]->d_name, strlen(filesRead[k]->d_name));
                 memmove(newTok->name + strlen(basePath) + strlen(filesRead[k]->d_name),
                         followPath, strlen(followPath) + 1);
+                newTok->nbEtoileFrom2 = nbEtoileFrom2 - 1;
 
                 currentTok = currentTok->next;
         }
+
         tmpTok = NULL;
         if (type == CMD && currentTok != NULL)
                 freeToken(*tokList, currentTok->precedent);
@@ -460,6 +474,7 @@ int expand_double(char **argv, struct tokenList **tokList, int posArg, int *nbAr
 
         if (basePathEmpty) basePath = "";
 
+
         token *newTok;
         token *tmpTok;
         for (i = 0; i <= depth; i++) {
@@ -494,6 +509,7 @@ int expand_double(char **argv, struct tokenList **tokList, int posArg, int *nbAr
                         newTok->next = currentTok;
                         newTok->type = CMD;
                 }
+                newTok->nbEtoileFrom2 = i;
 
                 newTok->name = malloc((2 * i) - 1 + strlen(followPath) + 1);
                 if (newTok->name == NULL) {
@@ -523,6 +539,7 @@ int expand_double(char **argv, struct tokenList **tokList, int posArg, int *nbAr
                 }
 
         }
+
         if (type == CMD && currentTok != NULL)
                 freeToken(*tokList, currentTok->precedent);
         else if (currentTok != NULL)

@@ -4,11 +4,9 @@
 
 int getExtremity(char **basePath, char **followPath, char **argv, int posArg);
 
-int filter (const struct dirent *);
+int verifFile(char *basePath, char *followPath, char *fileName, token *current);
 
 int openFile(char *path, DIR *dir, int depth);
-
-void expand_cmd(char *cmd);
 
 int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg, enum tokenType type);
 
