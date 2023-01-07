@@ -23,15 +23,15 @@ int getExtremity(char **basePath, char **followPath, token *current){
         }
         strcpy(tmp, current->name);
 
-        int posBeginning = 0;
-        int posFollowing;
+        int posBeginning = 0; //position du debut de la partie du chemin a traiter
+        int posFollowing; //position de debut de la partie du chemin suivante
         if (current->name[0] == '/')
                 posFollowing = 0;
         else posFollowing = -1;
         char *expandedPath = strtok(tmp, delimiters);
 
-        int cptSlash = 0;
-        int cptEtoile = 0;
+        int cptSlash = 0; //compte les '/' successifs
+        int cptEtoile = 0; //compte les etoiles
         while (expandedPath != NULL || cptSlash > 0) {
                 if (cptSlash) cptSlash--;
                 posBeginning = posFollowing;
@@ -47,7 +47,7 @@ int getExtremity(char **basePath, char **followPath, token *current){
                 expandedPath = strtok(NULL, delimiters);
         }
 
-        pattern = malloc(strlen(expandedPath));
+        pattern = malloc(strlen(expandedPath)); // suffixe des fichiers definis par l'*
         if (pattern == NULL){
                 free(tmp);
                 perror("Echec de l'allocation de memoire a pattern\n");
@@ -55,7 +55,7 @@ int getExtremity(char **basePath, char **followPath, token *current){
         }
         strcpy(pattern, expandedPath + 1);
 
-        *followPath = malloc(strlen(current->name) - posFollowing + 1);
+        *followPath = malloc(strlen(current->name) - posFollowing + 1); //chemin suivant le fichier defini par l'*
         if (*followPath == NULL){
                 free(tmp);
                 free(pattern);
@@ -65,10 +65,10 @@ int getExtremity(char **basePath, char **followPath, token *current){
         strcpy(*followPath, current->name + posFollowing);
 
         basePathEmpty = (posBeginning == -1);
-        if (basePathEmpty)
+        if (basePathEmpty) // si le chemin precedant l'etoile est vide
                 *basePath = ".";
         else {
-                *basePath = malloc(posBeginning + 2);
+                *basePath = malloc(posBeginning + 2); // chemin precedant l'etoile
                 if (*basePath == NULL) {
                         free(tmp);
                         free(pattern);
@@ -84,14 +84,14 @@ int getExtremity(char **basePath, char **followPath, token *current){
 }
 
 int verifFile(char *basePath, char *followPath, char *fileName, token *current){
-        if (!strcmp(basePath, ".")) basePath = "./";
-        if (!strcmp(followPath, "/")) {
+        if (!strcmp(basePath, ".")) basePath = "./"; //cas ou le chemin precedant l'* est vide
+        if (!strcmp(followPath, "/")) { //cas ou le chemin suivant le fichier defini par l'* est vide
                 followPathEmpty = 1;
                 followPath = "";
         }
         else followPathEmpty = 0;
 
-        char *pathFile = malloc(strlen(basePath) + strlen(fileName) + 1);
+        char *pathFile = malloc(strlen(basePath) + strlen(fileName) + 1); //chemin du fichier a traiter
         if (pathFile == NULL){
                 perror("Echec de l'allocation de memoire a pathFile\n");
                 if (followPathEmpty) followPath = "/";
@@ -108,7 +108,7 @@ int verifFile(char *basePath, char *followPath, char *fileName, token *current){
                 perror("Echec de l'allocation de memoire a st\n");
                 return -1;
         }
-        int ret_val = lstat(pathFile, st);
+        int ret_val = lstat(pathFile, st); //on stocke dans st les infos sur le fichier a traiter
         if (ret_val == -1) {
                 free(pathFile);
                 if (followPathEmpty) followPath = "/";
@@ -116,9 +116,12 @@ int verifFile(char *basePath, char *followPath, char *fileName, token *current){
                 return -1;
         }
 
-        if ((current->nbEtoileFrom2 > 0 && S_ISLNK(st->st_mode)) ||
+        if ((current->nbEtoileFrom2 > 0 && S_ISLNK(st->st_mode)) || //cas ou au moins la premiere * est issue
+                                                                    //de ** : on ne rentre pas dans les chemin sym
                 (!S_ISDIR(st->st_mode) && !S_ISLNK(st->st_mode)
-                && (strcmp(followPath, "") || followPathEmpty ))){
+                && (strcmp(followPath, "") || followPathEmpty ))){ //cas ou le chemin n'est ni un repertoire ni un
+                                                                   //chemin sym alors que le chemin suffixe
+                                                                   //n'est pas vide
 
                 free(pathFile);
                 if (followPathEmpty) followPath = "/";
@@ -128,6 +131,7 @@ int verifFile(char *basePath, char *followPath, char *fileName, token *current){
         free(st);
         free(pathFile);
 
+        //on cherche la premiere etoile qui ne fasse pas partie d'un nom de fichier
         for (int i = 0; i < strlen(fileName); i++){
                 if (fileName[i] == '*') {
                         if (!current->currentEtoileNom) {
@@ -139,6 +143,9 @@ int verifFile(char *basePath, char *followPath, char *fileName, token *current){
                 }
         }
 
+        //on verifie que le chemin suffixe ne contient pas d'etoile
+        //s'il en contient une, on ne peut pas determiner dans cette iteration si
+        //ce fichier est valide
         for (int i = 0; i < strlen(followPath); i++){
                 if (followPath[i] == '*') {
                         if (followPathEmpty) followPath = "/";
@@ -147,6 +154,7 @@ int verifFile(char *basePath, char *followPath, char *fileName, token *current){
         }
 
         char *path = malloc(strlen(basePath) + strlen(fileName) + strlen(followPath) + 1);
+        //chemin en remplacant l'* par le nom du fichier
         if (path == NULL){
                 perror("Echec de l'allocation de memoire a path\n");
                 if (followPathEmpty) followPath = "/";
@@ -175,8 +183,11 @@ int verifFile(char *basePath, char *followPath, char *fileName, token *current){
 
         const char *delimiters = "/";
 
-        char *lastFile;
-        char *beforeLastFile;
+        //On cherche a entrer dans le repertoire contenant le dernier fichier du chemin,
+        //pour verifier que ce fichier y est
+        //S'il y est, le chemin est valide
+        char *lastFile; //dernier fichier du chemin
+        char *beforeLastFile; //avant-dernier fichier du chemin
         char *cutPath = strtok(tmp, delimiters);
         while (cutPath != NULL) {
                 beforeLastFile = lastFile;
@@ -186,7 +197,7 @@ int verifFile(char *basePath, char *followPath, char *fileName, token *current){
         if (strlen(followPath) > 0 && followPath[strlen(followPath)-1] == '/'){
                 lastFile = beforeLastFile;
         }
-        char *regex = malloc(strlen(path) - strlen(lastFile)+1);
+        char *regex = malloc(strlen(path) - strlen(lastFile)+1); //chemin sans le dernier fichier
         if (regex == NULL) {
                 free(tmp);
                 free(path);
@@ -201,7 +212,7 @@ int verifFile(char *basePath, char *followPath, char *fileName, token *current){
         memmove(regex, path, strlen(path) - strlen(lastFile));
         memset(regex + strlen(path) - strlen(lastFile), '\0', 1);
 
-        DIR *dir = opendir(regex);
+        DIR *dir = opendir(regex); //on ouvre le repertoire
         if (dir == NULL){
                 free(tmp);
                 free(path);
@@ -216,6 +227,7 @@ int verifFile(char *basePath, char *followPath, char *fileName, token *current){
         struct dirent *file;
 
         while ((file = readdir(dir))) {
+                //pour chaque fichier du repertoire, on regarde s'il s'agit de celui qu'on cherche
                 if (!strcmp(path + strlen(path) - strlen(lastFile), file->d_name)) {
                         free(dir);
                         free(tmp);
@@ -238,26 +250,29 @@ int verifFile(char *basePath, char *followPath, char *fileName, token *current){
 }
 
 int openFile(char *path, DIR *dir, int depth){
+
         struct stat* st = malloc(sizeof(struct stat));
         if (st == NULL){
                 perror("Echec de l'allocation de memoire a st\n");
                 return -1;
         }
-        int ret_val = lstat(path, st);
+        int ret_val = lstat(path, st); //on stocke les infos du chemin a ouvrir
         if (ret_val == -1) {
                 free(st);
                 return -1;
         }
-        if (!S_ISDIR(st->st_mode)){
+        if (!S_ISDIR(st->st_mode) && !S_ISLNK(st->st_mode)){ //on verifie que c'est bien un repertoire
                 free(st);
                 return -1;
         }
 
-        char *basePath;
-        struct dirent *file;
-        DIR *tmpDir;
-        int maxDepth = depth;
+        char *basePath; //chemin du fichier
+        struct dirent *file; //fichier
+        DIR *tmpDir; //repertoire temporaire
+        int maxDepth = depth; //profondeur max de l'arborescence
 
+        //pour chaque fichier, on verifie que l'on peut entrer dedans, et si oui on appelle
+        //la fonction dessus recursivement
         while ((file = readdir(dir))){
                 if (!strcmp(file->d_name, "..") || !strcmp(file->d_name, ".")) continue;
 
@@ -271,23 +286,23 @@ int openFile(char *path, DIR *dir, int depth){
                 memset(basePath+strlen(path), '/', 1);
                 memmove(basePath + strlen(path) + 1, file->d_name, strlen(file->d_name) + 1);
 
-                int ret_val = lstat(basePath, st);
+                int ret_val = lstat(basePath, st); // on stocke les infos sur le fichier
                 if (ret_val == -1) {
                         free(st);
                         free(basePath);
                         return -1;
                 }
 
-                if (S_ISDIR(st->st_mode)){
+                if (S_ISDIR(st->st_mode)){      //on verifie que c'est un repertoire
                         tmpDir = opendir(basePath);
                         if (tmpDir == NULL){
                                 free(st);
                                 free(basePath);
                                 return -1;
                         }
-                        ret_val = openFile(basePath, tmpDir, depth+1);
+                        ret_val = openFile(basePath, tmpDir, depth+1); // on appelle la fonction recursivement
                         closedir(tmpDir);
-                        if (ret_val > maxDepth) maxDepth = ret_val;
+                        if (ret_val > maxDepth) maxDepth = ret_val; //on stocke la nouvelle profondeur max
                 }
                 free(basePath);
         }
@@ -296,6 +311,8 @@ int openFile(char *path, DIR *dir, int depth){
 }
 
 int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg, enum tokenType type) {
+
+        //on recupere le token correspondant au chemin que l'on traite
         int i = 0;
         token *currentTok = (*tokList)->first;
         while (i < posArg){
@@ -303,17 +320,17 @@ int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg,
                 i++;
         }
 
-        char *basePath;
-        char *followPath;
-        getExtremity(&basePath, &followPath, currentTok);
+        char *basePath; //chemin precedent l'*
+        char *followPath; //chemin suivant le fichier defini par l'*
+        getExtremity(&basePath, &followPath, currentTok); // on recupere les valeurs des deux var precedentes
         if (basePathEmpty == -1)  {
                 free(pattern);
                 return -1;
         }
 
-        struct dirent *file;
-        int nbFile = 0;
-        DIR *dir = opendir(basePath);
+        struct dirent *file; // le(s) fichier(s) pointe(s) par l'*
+        int nbFile = 0; //le nombre de fichier qui correspondent
+        DIR *dir = opendir(basePath); //le repertoire contenant les fichiers pointes par l'*
         if(dir == NULL){
                 if (!basePathEmpty) free(basePath);
                 free(followPath);
@@ -321,8 +338,11 @@ int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg,
                 return -1;
         }
 
+
         int ret_val;
-        int argValid = 0;
+        int argValid = 0; //un booleen qui verifie qu'au moins un fichier est valide
+        //pour chaque fichier dans le repertoire, on verifie qu'il peut s'agir d'un des fichiers pointes
+        //par l'*, et si oui on incremente nbFile
         while((file = readdir(dir))) {
                 if (file->d_name[0] != '.' &&
                     !strcmp(pattern, file->d_name + (strlen(file->d_name) - strlen(pattern)))) {
@@ -342,6 +362,7 @@ int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg,
         }
         closedir(dir);
 
+        //si aucun argument est valide, on laisse le token tel quel et on passe au suivant
         if (!argValid) {
                 free(pattern);
                 if (!basePathEmpty) free(basePath);
@@ -370,6 +391,7 @@ int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg,
         }
 
         int k = 0;
+        //on recupere a nouveau les fichiers qui peuvent etre pointes par l'*, et on les stocke dans filesRead
         while((file = readdir(dir))){
                 if (file->d_name[0] != '.' &&
                 !strcmp(pattern, file->d_name + (strlen(file->d_name) - strlen(pattern)))){
@@ -392,14 +414,15 @@ int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg,
 
         if (basePathEmpty) basePath = "";
 
+        //on se place sur le token precedent celui qu'on considere
         i = 0;
         currentTok = (*tokList)->first;
         while (i < posArg-1 && currentTok->next != (*tokList)->last){
                 currentTok = currentTok->next;
                 i++;
         }
-        int nbEtoileFrom2 = 0;
-        int nbEtoileNom = 0;
+        int nbEtoileFrom2 = 0; //nombre d'* issues de **
+        int nbEtoileNom = 0; //nb de fichiers contenant une * dans leur nom
         if (currentTok->next != NULL) {
                 nbEtoileFrom2 = currentTok->next->nbEtoileFrom2;
                 nbEtoileNom = currentTok->next->nbEtoileNom;
@@ -409,6 +432,7 @@ int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg,
         token *newTok;
         token *tmpTok = NULL;
 
+        //pour chaque fichier de filesRead, on cree un nouveau token et on l'ajoute a la tokenList
         for (int k = 0; k < nbFile; k++){
                 newTok = malloc(sizeof(token));
                 if (newTok == NULL){
@@ -477,6 +501,7 @@ int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg,
         }
 
         tmpTok = NULL;
+        //on supprime le token qui a servi de base
         if (type == CMD && currentTok != NULL)
                 freeToken(*tokList, currentTok->precedent);
         else if (currentTok != NULL)
@@ -492,6 +517,8 @@ int expand_path(char **argv, struct tokenList **tokList, int posArg, int *nbArg,
 }
 
 int expand_double(char **argv, struct tokenList **tokList, int posArg, int *nbArg, enum tokenType type){
+
+        //On recupere le token correspondant au chemin que l'on traite
         int i = 0;
         token *currentTok = (*tokList)->first;
         while (i < posArg){
@@ -499,15 +526,15 @@ int expand_double(char **argv, struct tokenList **tokList, int posArg, int *nbAr
                 i++;
         }
 
-        char *basePath;
-        char *followPath;
-        getExtremity(&basePath, &followPath, currentTok);
+        char *basePath; //chemin precedent l'*
+        char *followPath; //chemin suivant le fichier defini par l'*
+        getExtremity(&basePath, &followPath, currentTok); // on recupere les valeurs des deux var precedentes
         if (basePathEmpty == -1)  {
                 free(pattern);
                 return -1;
         }
 
-        DIR *dir = opendir(basePath);
+        DIR *dir = opendir(basePath); //le racine de l'arborescence que l'on va considerer
         if(dir == NULL){
                 if (!basePathEmpty) free(basePath);
                 free(followPath);
@@ -516,9 +543,10 @@ int expand_double(char **argv, struct tokenList **tokList, int posArg, int *nbAr
         }
 
 
-        int depth = openFile(basePath, dir, 1);
+        int depth = openFile(basePath, dir, 1); //on recupere la profondeur max de cette arborescence
         closedir(dir);
 
+        //on se place sur le token precedent celui que l'on traite
         i = 0;
         currentTok = (*tokList)->first;
         while (i < posArg-1 && currentTok->next != (*tokList)->last){
@@ -531,6 +559,8 @@ int expand_double(char **argv, struct tokenList **tokList, int posArg, int *nbAr
 
         token *newTok;
         token *tmpTok;
+        //pour chaque profondeur i inferieure a la profondeur max, on cree le token qui correspond au chemin
+        //obtenu en remplacant "**" par i fois "*/"
         for (i = 0; i <= depth; i++) {
                 if (strlen(followPath) == 0 && i == 0) continue;
 
@@ -595,6 +625,7 @@ int expand_double(char **argv, struct tokenList **tokList, int posArg, int *nbAr
 
         }
 
+        //on supprime le token qui a servi de base
         if (type == CMD && currentTok != NULL)
                 freeToken(*tokList, currentTok->precedent);
         else if (currentTok != NULL)
