@@ -48,7 +48,11 @@ char *initialize_prompt(int valret) {
             if (strlen(pwd) + (SIZE_VALRET + 1) < SIZE_PROMPT) {
                 sprintf(string, "%s[%s]%s%s%s$ ", valret_color, "SIG", CYAN, pwd, BASIC);
             } else {
-                char *reduction = pwd + strlen(pwd) + 8 - SIZE_PROMPT;
+                char *reduction;
+                if (valret == 255)
+                        reduction = pwd + strlen(pwd) + 10 - SIZE_PROMPT;
+                else
+                        reduction = pwd + strlen(pwd) + 8 - SIZE_PROMPT;
                 sprintf(string, "%s[%s]%s%s%s%s$ ", valret_color, "SIG", CYAN, "...", reduction, BASIC);
             }
             return string;
