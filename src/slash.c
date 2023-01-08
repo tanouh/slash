@@ -28,6 +28,7 @@ int ret_val;
 char * prompt;
 struct tokenList *toklist;
 char *lastWd; // last working directory
+int n_pipes;
 
 char *initialize_prompt(int valret) {
         char *valret_color;
@@ -83,7 +84,7 @@ int main() {
 
         int lenTokList;
 
-	int n_pipes = 0 ; /*PIPES*/
+	n_pipes = 0 ; /*PIPES*/
 
         token *current;
         while ((buffer = readline(prompt)) != NULL) {
@@ -96,7 +97,7 @@ int main() {
                 add_history(buffer);
                 free(prompt);
 		
-		toklist = lex(buffer, toklist, &n_pipes); /*PIPES*/
+		toklist = lex(buffer, toklist); 
  
 		free(buffer);
 
@@ -111,7 +112,7 @@ int main() {
                         break;
                 }
 
-                ret_val = parser(toklist, argCmd, n_pipes); /*PIPES*/
+                ret_val = parser(toklist, argCmd); /*PIPES*/
                 
 		free(argCmd);
                 prompt = initialize_prompt(ret_val);

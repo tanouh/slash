@@ -14,6 +14,8 @@
 #include "slasherr.h"
 #include "redirection.h"
 
+extern int n_pipes;
+
 static struct cmdFun tabFun[] = {
         { "cd", exec_cd },
         { "pwd", exec_pwd },
@@ -48,7 +50,7 @@ int parserRedir(struct tokenList **tokList, int len, int *fdin, int *fdout, int 
 	}
 }
 
-int parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int len, int * fdin, int * fdout, int * fderr, int *pipefds, int n_pipes){
+int parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int len, int * fdin, int * fdout, int * fderr){
 
         if ((*tokList)->first == NULL) return 1;
         int firstCmd = ((*tokList)->first == (*fullTokList)->first);
@@ -137,7 +139,7 @@ Approche pour les redirections :
 	pipeline : stocker le nombre de pipe pour implémenter la pipeline après
  */
 
-int parser(struct tokenList *tokList, char **argCmd, int n_pipes ){ /*PIPES*/
+int parser(struct tokenList *tokList, char **argCmd){ 
 
 
         token *current = tokList->first;
@@ -199,7 +201,7 @@ int parser(struct tokenList *tokList, char **argCmd, int n_pipes ){ /*PIPES*/
 			partial->first = startCmd;
                         partial->last = tmp;
 			
-			val_ret = parserAux(&partial, &tokList, len, &fdin, &fdout, &fderr, pipefds, n_pipes);
+			val_ret = parserAux(&partial, &tokList, len, &fdin, &fdout, &fderr);
                         if (val_ret){
                                 free(partial);
                                 return val_ret;

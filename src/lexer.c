@@ -6,11 +6,12 @@
 #include "token.h"
 #include "slasherr.h"
 
+extern int n_pipes;
 /*
 TODO : Pour le jalon 2 : tester que l'élément avant n'est pas un | pcq sinon le token serait une commande
 */
 
-int lex_one(char * value, tokenList * tokList , int * n_pipes ) /*PIPES*/
+int lex_one(char * value, tokenList * tokList) /*PIPES*/
 {
 	enum tokenType type = REDIRECT;
 	enum redirection redir_type = NO_REDIR;
@@ -23,7 +24,7 @@ int lex_one(char * value, tokenList * tokList , int * n_pipes ) /*PIPES*/
 			break;
 		case '|':
 			type = PIPE;
-			*n_pipes++; 
+			n_pipes++; 
 			break;			
 		default : 
 			type = ARG;
@@ -95,7 +96,7 @@ int lex_three(char * value, tokenList * tokList)
 	return makeToken(tokList,value,type, redir_type);
 }
 
-struct tokenList *lex (char *input, tokenList *tokList, int * n_pipes){
+struct tokenList *lex (char *input, tokenList *tokList){
 	int val_ret = 0;
 	const char *delimiters = " ";
 	char *tmp = malloc(strlen(input) +1);
@@ -121,7 +122,7 @@ struct tokenList *lex (char *input, tokenList *tokList, int * n_pipes){
 	{
 		switch(strlen(tokenStr)){
 			case 1:
-				val_ret = lex_one(tokenStr,tokList, n_pipes);
+				val_ret = lex_one(tokenStr,tokList);
 				break;
 			case 2:
 				val_ret = lex_two(tokenStr,tokList);
