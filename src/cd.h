@@ -16,14 +16,13 @@
  */
 int exec_cd(int fdin, int fdout, int fderr, int argc, char **argv);
 
-int cd(char* path, int physical);
+int cd(char *path, int physical);
 
 char *catPath(char *path, char *realpath);
 
-char *clean (char *path, char *realpath);
+char *clean(char *path, char *realpath);
 
 char **cut(char *path, size_t path_size, size_t *size);
-
 
 
 #endif //PROJET_SY5_CD_H

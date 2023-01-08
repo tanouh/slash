@@ -5,10 +5,9 @@
 /**
  * les differents types de token
  */
-enum tokenType{
+enum tokenType {
     ARG,
     CMD,
-    OPE,
     PIPE,
     REDIRECT
 };
@@ -16,19 +15,19 @@ enum tokenType{
 /**
  * les differents types de redirection
  */
-enum redirection{
-	STDIN,
-	STDOUT,
-	STDERR,
-	STDOUT_TRUNC,
-	STDOUT_APPEND,
-	STDERR_TRUNC,
-	STDERR_APPEND,
-	NO_REDIR
+enum redirection {
+    STDIN,
+    STDOUT,
+    STDERR,
+    STDOUT_TRUNC,
+    STDOUT_APPEND,
+    STDERR_TRUNC,
+    STDERR_APPEND,
+    NO_REDIR
 };
 
 
-typedef struct token{
+typedef struct token {
     char *name; //valeur de l'argument
     enum tokenType type; //type de token
     enum redirection redir_type; //type de redirection
@@ -37,10 +36,10 @@ typedef struct token{
     int nbEtoileFrom2; //nombre d'etoiles ajoutees & partir de **
     int nbEtoileNom; //nb d'elements de name ce name contenant une * dans leur nom
     int currentEtoileNom; //bool determinant au moment de l'incrementation de nbEtoileNom si
-                          // nbEtoileNom a deja ete incremente dans l'iteration courante
+    // nbEtoileNom a deja ete incremente dans l'iteration courante
 } token;
 
-typedef struct tokenList{
+typedef struct tokenList {
     size_t len; //longueur de la tokenList
     struct token *first; //premier element
     struct token *last; //dernier element

@@ -8,7 +8,7 @@
 struct tokenList *makeTokenList() {
         struct tokenList *tokList = malloc(sizeof(tokenList));
         if (tokList == NULL) {
-		print_err(NULL, MALLOC_ERR);
+                print_err(NULL, MALLOC_ERR);
                 return NULL;
         }
         tokList->first = NULL;
@@ -16,14 +16,14 @@ struct tokenList *makeTokenList() {
         return tokList;
 }
 
-void freeToken(struct tokenList *tokList, token *current){
+void freeToken(struct tokenList *tokList, token *current) {
         if (tokList == NULL || current == NULL) return;
         token *last = current->precedent;
         token *next = current->next;
-        if (last != NULL){
+        if (last != NULL) {
                 last->next = current->next;
         }
-        if (next != NULL){
+        if (next != NULL) {
                 next->precedent = current->precedent;
         }
         if (current == tokList->first)
@@ -52,7 +52,7 @@ int makeToken(struct tokenList *tokList, const char *name, enum tokenType tokTyp
         tok->nbEtoileFrom2 = 0;
         tok->nbEtoileNom = 0;
         tok->currentEtoileNom = 0;
-	tok->redir_type = redir_type;
+        tok->redir_type = redir_type;
         tok->precedent = tokList->last;
         tok->next = NULL;
         if (tokList->first == NULL) {
@@ -65,12 +65,9 @@ int makeToken(struct tokenList *tokList, const char *name, enum tokenType tokTyp
         return 1;
 }
 
-//TODO: rendre la liste générique
-//ajouter void *, sizeof (elt), fonction utilitaire pour nettoyer facilement, deplacer le pointeur de k-fois la
-//de l'element
 void clearTokenList(struct tokenList *tokList) {
         if (tokList == NULL) return;
-	token * tmp = tokList->first;
+        token *tmp = tokList->first;
         while (tokList->first != NULL) {
                 tmp = tokList->first->next;
                 if (tokList->first->name != NULL) free(tokList->first->name);

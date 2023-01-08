@@ -3,7 +3,8 @@
 
 #include "token.h"
 
-int compute_redirection (int *fdin, int * fdout, int *fderr, struct tokenList ** tokList);
+int compute_redirection(int *fdin, int *fdout, int *fderr, struct tokenList **tokList);
+
 int redirect(int oldfd, int newfd);
 
 

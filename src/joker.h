@@ -1,5 +1,6 @@
 #ifndef PROJET_SY5_JOKER_H
 #define PROJET_SY5_JOKER_H
+
 #include <dirent.h>
 
 /**
