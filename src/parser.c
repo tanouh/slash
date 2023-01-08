@@ -161,12 +161,17 @@ int parser(struct tokenList *tokList, char **argCmd){
 	int fderr = STDERR_FILENO;
 
 
-	int pipefds [2*n_pipes];
+	int * pipefds = malloc(n_pipes*2*sizeof(int));
+	if (pipefds == NULL) {
+		print_err(NULL, MALLOC_ERR);
+		return 1;
+	}
 
 	/* parent creates all needed pipes at the start */
 	for(int i = 0; i < n_pipes; i++ ){
 		if( pipe(pipefds + i*2) < 0 ){
 			print_err(NULL, "pipe error");
+			free(pipefds);
 			return 1;
 		}
 	}
@@ -207,6 +212,7 @@ int parser(struct tokenList *tokList, char **argCmd){
 			val_ret = parserAux(&partial, &tokList, len, &fdin, &fdout, &fderr);
                         if (val_ret){
                                 free(partial);
+				free(pipefds);
                                 return val_ret;
                         }
 			j++;
@@ -224,5 +230,6 @@ int parser(struct tokenList *tokList, char **argCmd){
 	}
 
         free(partial);
+	free(pipefds);
         return 0;
 }
