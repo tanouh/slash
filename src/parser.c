@@ -71,12 +71,15 @@ int parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int le
         }
 
         int ret_val;
+        int cpt;
         current = (*tokList)->first;
         for (int i = 0; i < len; i++){ // Parcours des arguments 
-
+                cpt = 0;
 		if (!argv[i]) continue;
 		for (int j = 0; j < strlen(argv[i]); j++){ // Parcours d'un argument
 			if (argv[i][j] == '*'){
+
+                                if (cpt++ < current->nbEtoileNom) continue;
                                 if (j+1 < strlen(argv[i]) && argv[i][j+1] == '*')
                                         ret_val = expand_double(argv, tokList, i, &len, current->type);
                                 else
@@ -84,7 +87,7 @@ int parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int le
 
                                 if (firstCmd) (*fullTokList)->first = (*tokList)->first;
                                 if (lastCmd) (*fullTokList)->last = (*tokList)->last;
-                                
+
 				if (ret_val == 0){
                                          argv = realloc(argv, len*sizeof (char *));
                                          if (argv == NULL) {
