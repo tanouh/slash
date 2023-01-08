@@ -12,13 +12,15 @@
 pid_t child_pid;
 
 
-char **formate_args(int argc, char **argv) {
+char **formate_args(int argc, char **argv)
+{
     char **arg_list = malloc((argc + 1) * sizeof(char *));
-    if (arg_list == NULL) {
+    if (arg_list == NULL){
         print_err(NULL, MALLOC_ERR);
         return NULL;
     }
-    for (int i = 0; i < argc; i++) {
+    for (int i = 0; i < argc; i++)
+    {
         arg_list[i] = argv[i];
     }
     arg_list[argc] = NULL;
@@ -26,9 +28,9 @@ char **formate_args(int argc, char **argv) {
 }
 
 
+
 void handler(int sig) {
 
-    // check if we are in the child process
     if (getpid() == child_pid) {
         // we are in the child process, so kill the child process
         switch (sig) {
@@ -43,56 +45,63 @@ void handler(int sig) {
                 break;
         }
     }
+
 }
 
-int exec_external(int fdin, int fdout, int fderr, int argc, char **argv) {
-    if (argc < 0) {
+int exec_external(int fdin, int fdout, int fderr, int argc, char **argv)
+{
+    if (argc < 0)
+    {
         free(argv);
         return 1;
     }
     char **args_list = formate_args(argc, argv);
-    if (args_list == NULL) goto error;
-    int stat = 0;
-    int retval = 0;
+    if (args_list == NULL) {
+        free(args_list);
+        free(argv);
+        exit(errno);
+    };
+
     struct sigaction sa;
     memset(&sa, 0, sizeof(struct sigaction));
     sa.sa_handler = handler;
+
     sigaction(SIGTERM, &sa, NULL);
     sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGKILL, &sa, NULL);
 
     pid_t proc = fork();
 
-    switch (proc) {
+    int stat = -1;
+
+
+    switch (proc)
+    {
         case -1:
-            goto error;
+            free(args_list);
+            free(argv);
+            exit(errno);
         case 0:
 
-            redirect(fdin, STDIN_FILENO); /*REDIR*/
-            redirect(fdout, STDOUT_FILENO);
+            redirect(fdin,STDIN_FILENO); /*REDIR*/
+            redirect(fdout,STDOUT_FILENO);
             redirect(fderr, STDERR_FILENO);
+
             child_pid = getpid();
+
             int status = execvp(argv[0], args_list);
-            if (status == -1) {
+            if (status == -1)
+            {
                 print_err(argv[0], "command not found");
-                goto error;
+                free(args_list);
+                free(argv);
+                exit(errno);
             }
         default:
             waitpid(child_pid, &stat, 0);
-            if (WIFEXITED(stat)) {
-                retval = WEXITSTATUS(stat);
-            } else if (WIFSIGNALED(stat)) {
-                retval = 255;
-            } else if (WIFSTOPPED(stat)) {
-                retval = 255;
-            }
-
+            wait(NULL);
             free(args_list);
+            free(argv);
+            return WEXITSTATUS(stat);
     }
-    free(argv);
-    return retval;
-
-    error:
-    free(args_list);
-    free(argv);
-    exit(errno);
 }
