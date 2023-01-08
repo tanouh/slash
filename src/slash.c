@@ -17,6 +17,8 @@
 #define SIZE_PROMPT 30
 #define SIZE_VALRET 3
 #define SIZE_COLOR 16
+#define RET_VAL_SIG 255
+
 
 #define GREEN "\001\033[32m\002"
 #define RED "\001\033[91m\002"
@@ -44,15 +46,12 @@ char *initialize_prompt(int valret) {
                 return NULL;
         }
         char *pwd = getenv("PWD");
-        if (valret == 255) {
+        if (valret == RET_VAL_SIG) {
                 if (strlen(pwd) + (SIZE_VALRET + 1) < SIZE_PROMPT) {
                         sprintf(string, "%s[%s]%s%s%s$ ", valret_color, "SIG", CYAN, pwd, BASIC);
                 } else {
                         char *reduction;
-                        if (valret == 255)
-                                reduction = pwd + strlen(pwd) + 10 - SIZE_PROMPT;
-                        else
-                                reduction = pwd + strlen(pwd) + 8 - SIZE_PROMPT;
+                        reduction = pwd + strlen(pwd) + 10 - SIZE_PROMPT;
                         sprintf(string, "%s[%s]%s%s%s%s$ ", valret_color, "SIG", CYAN, "...", reduction, BASIC);
                 }
                 return string;
@@ -124,7 +123,7 @@ int main() {
                 n_pipes = 0; /*PIPES*/
         }
         free(buffer);
-        rl_clear_history(); // à voir si ça ne pose pas problème
+        rl_clear_history();
         free(prompt);
         if (toklist->first != NULL)
                 clearTokenList(toklist);
