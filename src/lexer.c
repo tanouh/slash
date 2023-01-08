@@ -8,9 +8,6 @@
 
 extern int n_pipes;
 
-/*
-TODO : Pour le jalon 2 : tester que l'élément avant n'est pas un | pcq sinon le token serait une commande
-*/
 
 int lex_one(char *value, tokenList *tokList) /*PIPES*/
 {

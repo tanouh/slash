@@ -24,12 +24,14 @@ char **formate_args(int argc, char **argv) {
         arg_list[argc] = NULL;
         return arg_list;
 }
-
+/**
+ *  We kill the child process with the signal seded
+ * @param sig signal send
+ */
 
 void handler(int sig) {
 
         if (getpid() == child_pid) {
-                // we are in the child process, so kill the child process
                 switch (sig) {
                         case SIGINT:
                                 kill(child_pid, SIGINT);
@@ -44,6 +46,16 @@ void handler(int sig) {
         }
 
 }
+
+/**
+ * Execute the procesus (slash + command(recouvrement d'un enfant de slash))
+ * @param fdin
+ * @param fdout
+ * @param fderr
+ * @param argc
+ * @param argv
+ * @return
+ */
 
 int exec_external(int fdin, int fdout, int fderr, int argc, char **argv) {
         if (argc < 0) {
