@@ -3,6 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <errno.h>
 
 #include "cd.h"
 #include "exit.h"
@@ -15,6 +16,10 @@
 #include "redirection.h"
 
 extern int n_pipes;
+extern int n_cmds;
+
+int fdpipe[2];
+
 
 static struct cmdFun tabFun[] = {
         { "cd", exec_cd },
@@ -22,7 +27,63 @@ static struct cmdFun tabFun[] = {
         { "exit", exec_exit },
 };
 
-int parserRedir(struct tokenList **tokList, int len, int *fdin, int *fdout, int *fderr, char ** argv){
+command * makeCommand(char ** argv, int len, int *fdin, int *fdout, int *fderr){
+	command * cmd = malloc(sizeof(command));
+	if(cmd == NULL) {
+		print_err("parser", MALLOC_ERR);
+		return NULL;
+	}
+	cmd->argv = argv;
+	cmd->len= len;
+	cmd->fdin = fdin;
+	cmd->fdout = fdout;
+	cmd->fderr= fderr;
+	cmd->next = NULL;
+	return cmd;
+}
+
+int execute_commands (command * firstCmd){
+	int ret_val = 0 ;
+	command * current_cmd = firstCmd;
+	char * cmdName = NULL; 
+	int (*fun)(int*, int*, int*, int, char**) = NULL;
+
+	int i = 0; 
+
+	while(current_cmd != NULL){
+		cmdName = (current_cmd->argv)[0];
+		
+		/*Commandes internes*/
+		for (i = 0; i < sizeof(tabFun)/sizeof(tabFun[0]); i++){
+			if (!strcmp(tabFun[i].cmdName,cmdName)){
+				fun = tabFun[i].fun;
+			}
+		}
+
+		if(n_pipes > 0){
+			if(pipe(fdpipe) == -1){
+				print_err(cmdName, "Pipe error");
+				return 1;
+			}
+
+			ret_val = exec_external(current_cmd->fdin,current_cmd->fdout, current_cmd->fderr, current_cmd->len, current_cmd->argv);
+
+		}else{
+			if(fun == NULL){
+				return exec_external(current_cmd->fdin,current_cmd->fdout, current_cmd->fderr, current_cmd->len, current_cmd->argv);
+			}else{
+				return fun(current_cmd->fdin,current_cmd->fdout, current_cmd->fderr, current_cmd->len, current_cmd->argv);
+			}
+		}
+		current_cmd = current_cmd -> next;
+	}
+	return ret_val;
+
+}
+
+
+command * parserRedir(struct tokenList **tokList, int len, int *fdin, int *fdout, int *fderr, char ** argv){
+
 	token *current = (*tokList)->first;
 	//if(current -> type != REDIRECT)
         argv[0] = current->name;
@@ -34,33 +95,21 @@ int parserRedir(struct tokenList **tokList, int len, int *fdin, int *fdout, int 
 		argv[i] = current->name; 
 		k++;   
         }
-	int (*fun)(int, int, int, int, char**) = NULL;
-        for (int i = 0; i < sizeof(tabFun)/sizeof(tabFun[0]); i++){
-                if (!strcmp(tabFun[i].cmdName,(*tokList)->first->name)){
-                        fun = tabFun[i].fun;
-                }
-        }
+	
 	int ret_val = compute_redirection(fdin,fdout, fderr, tokList);
-	if(ret_val != 0) return 1;
+	
+	if(ret_val != 0) return NULL;
 
-	if(fun == NULL){
-		return exec_external(*fdin,*fdout, *fderr, k, argv);
-	}else{
-		return fun(*fdin, *fdout, *fderr, k, argv);
-	}
+	command * cmd = makeCommand(argv,k,fdin,fdout,fderr);
+
+	return cmd;
 }
 
-int parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int len, int * fdin, int * fdout, int * fderr){
-
-        if ((*tokList)->first == NULL) return 1;
+command * parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int len, int * fdin, int * fdout, int * fderr, char** argv){
+	if(!argv) return NULL;
+        if ((*tokList)->first == NULL) return NULL;
         int firstCmd = ((*tokList)->first == (*fullTokList)->first);
         int lastCmd = ((*tokList)->last == (*fullTokList)->last);
-
-        char **argv = calloc(len,sizeof(char *));
-        if (argv == NULL) {
-                print_err(NULL, MALLOC_ERR);
-                return 1;
-        }
 
         token *current = (*tokList)->first;
 
@@ -92,7 +141,7 @@ int parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int le
                                          argv = realloc(argv, len*sizeof (char *));
                                          if (argv == NULL) {
                                                  print_err(NULL, MALLOC_ERR);
-                                                 return 1;
+                                                 return NULL;
                                          }
                                          current = (*tokList)->first;
                                          argv[0] = current->name;
@@ -107,13 +156,13 @@ int parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int le
 				}
 				else if (ret_val == -1) {
 					len -= 1;
-					if (current == (*tokList)->first) return 1;
+					if (current == (*tokList)->first) return NULL;
 					freeToken(*tokList, current);
 
-                                         argv = realloc(argv, len*sizeof (char *));
+                                        argv = realloc(argv, len*sizeof (char *));
 					if (argv == NULL) {
 						print_err(NULL, MALLOC_ERR);
-						return 1;
+						return NULL;
 					}
 					current = (*tokList)->first;
 					argv[0] = current->name;
@@ -127,54 +176,41 @@ int parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int le
 
 					break;
 				}
-				else return 1;
+				else return NULL;
                         }
                 }
 		
 		if (i != -1) current = current->next;
         }
-
 	return parserRedir(tokList, len,fdin, fdout,fderr,argv);
 }
 
-/**
-Approche pour les redirections : 
-	pipeline : stocker le nombre de pipe pour implémenter la pipeline après
- */
-
 int parser(struct tokenList *tokList, char **argCmd){ 
-
+	// if (n_pipes > n_cmds) {
+	// 	print_err("pipe", "erreur pipe");
+	// 	exit(2);
+	// }
 
         token *current = tokList->first;
-        if (current->type != CMD) return 1;
+        if (current->type != CMD) {
+		return 1;
+	}
 	token *startCmd = tokList->first;
         token *tmp;
         
 	struct tokenList *partial = makeTokenList();
-        
+
+        command * current_cmd = NULL;
+	command * last_cmd = NULL;
+	command * first_cmd = NULL;
 	int len = 0;
 	int val_ret = 0;
-	int j = 0 ;
-
+	
+	int cmd_i = 0;
 	int fdin = STDIN_FILENO;
 	int fdout = STDOUT_FILENO;
 	int fderr = STDERR_FILENO;
 
-
-	int * pipefds = malloc(n_pipes*2*sizeof(int));
-	if (pipefds == NULL) {
-		print_err(NULL, MALLOC_ERR);
-		return 1;
-	}
-
-	/* parent creates all needed pipes at the start */
-	for(int i = 0; i < n_pipes; i++ ){
-		if( pipe(pipefds + i*2) < 0 ){
-			print_err(NULL, "pipe error");
-			free(pipefds);
-			return 1;
-		}
-	}
 
         while (current != NULL){
                 if (current->type == CMD){
@@ -182,20 +218,6 @@ int parser(struct tokenList *tokList, char **argCmd){
                         *startCmd = *current;
                 }
                 if (current->next == NULL || current->next->type == PIPE) {
-
-			if(n_pipes > 0){
-				if (j!=0) {
-					/* if not first command */
-					if (redirect(pipefds[(j-1)*2], 0) < 0 ) return 1;
-					fdin = pipefds[j*2];
-				}
-				
-				if(current->next) {/* if not last command */
-				
-					if(redirect(pipefds[j*2+1], 1) < 0 ) return 1;
-					fdout = pipefds[j*2 + 1];
-				}
-			}
 
 			tmp = current;
 			if(current->next && current->next->type == PIPE){ /*PIPES*/
@@ -208,28 +230,43 @@ int parser(struct tokenList *tokList, char **argCmd){
                         
 			partial->first = startCmd;
                         partial->last = tmp;
-			
-			val_ret = parserAux(&partial, &tokList, len, &fdin, &fdout, &fderr);
-                        if (val_ret){
-                                free(partial);
-				free(pipefds);
-                                return val_ret;
-                        }
-			j++;
+
+			char **argv = calloc(len,sizeof(char *));
+			if (argv == NULL) {
+				free(current_cmd);
+				print_err(NULL, MALLOC_ERR);
+				return 1;
+			}
+
+			current_cmd = parserAux(&partial, &tokList, len, &fdin, &fdout, &fderr, argv);
+			if(current_cmd){
+				if(cmd_i == 0) first_cmd = current_cmd; //première commande à exécuter
+				current_cmd -> next = last_cmd;
+			}else{
+				if(last_cmd) free(last_cmd);
+				if(first_cmd) free(first_cmd);
+				free(partial);
+				return 1;
+			}		
+			cmd_i++;
+
                 }
-                if (current == NULL){
+                if (current == NULL ){
                         break;
                 }
-                else current = current->next;
+                else {
+			current = current->next;
+			if(current_cmd){
+				last_cmd= current_cmd;
+				current_cmd = current_cmd -> next;
+			}
+		}
                 len++;
         }
 
-	/* parent closes all of its copies at the end */
-	for(int i = 0; i < 2 * n_pipes; i++ ){
-		close(pipefds[i] );
-	}
+	val_ret = execute_commands(first_cmd);
 
         free(partial);
-	free(pipefds);
-        return 0;
+	free(current_cmd);
+        return val_ret;
 }

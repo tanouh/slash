@@ -6,10 +6,10 @@
 #include "pwd.h"
 #include "slasherr.h"
 
-int exec_pwd(int fdin, int fdout, int fderr, int argc, char *argv[]) {
+int exec_pwd(int *fdin, int *fdout, int *fderr, int argc, char *argv[]) {
         if (argc == 1) {
                 free(argv);
-                return pwdL(fdout);
+                return pwdL(*fdout);
         }
         //Si on doit faire pwd retourne meme si les argument ne sont pas valide enlever cette ligne et l'autre signalé
         if (argc > 2) {
@@ -20,11 +20,11 @@ int exec_pwd(int fdin, int fdout, int fderr, int argc, char *argv[]) {
 
         if ((argc == 2) && (!strcmp((argv[1]), "-L"))) {
                 free(argv);
-		return pwdL(fdout);
+		return pwdL(*fdout);
         }
         if ((argc == 2) && (!strcmp((argv[1]), "-P"))) {
                 free(argv);
-		return pwdP(fdout);
+		return pwdP(*fdout);
         }
         //Celle-ci
 	free(argv);

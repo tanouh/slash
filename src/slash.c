@@ -29,6 +29,7 @@ char * prompt;
 struct tokenList *toklist;
 char *lastWd; // last working directory
 int n_pipes;
+int n_cmds;
 
 char *initialize_prompt(int valret) {
         char *valret_color;
@@ -85,6 +86,7 @@ int main() {
         int lenTokList;
 
 	n_pipes = 0 ; /*PIPES*/
+	n_cmds = 0 ;
 
         token *current;
         while ((buffer = readline(prompt)) != NULL) {

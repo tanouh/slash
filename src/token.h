@@ -8,7 +8,6 @@
 enum tokenType{
     ARG,
     CMD,
-    OPE,
     PIPE,
     REDIRECT
 };

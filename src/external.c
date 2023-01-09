@@ -9,6 +9,10 @@
 #include "slasherr.h"
 #include "redirection.h"
 
+extern int n_cmds;
+extern int n_pipes;
+extern int fdpipe[2];
+
 pid_t child_pid;
 
 
@@ -48,60 +52,78 @@ void handler(int sig) {
 
 }
 
-int exec_external(int fdin, int fdout, int fderr, int argc, char **argv)
-{
-    if (argc < 0)
-    {
-        free(argv);
-        return 1;
-    }
-    char **args_list = formate_args(argc, argv);
-    if (args_list == NULL) {
-        free(args_list);
-        free(argv);
-        exit(errno);
-    };
+int exec_external(int *fdin, int *fdout, int *fderr, int argc, char **argv)
+{ 
+	if (argc < 0)
+	{
+		free(argv);
+		return 1;
+	}
+	char **args_list = formate_args(argc, argv);
+	if (args_list == NULL) {
+		free(args_list);
+		free(argv);
+		exit(errno);
+	};
 
-    struct sigaction sa;
-    memset(&sa, 0, sizeof(struct sigaction));
-    sa.sa_handler = handler;
+	struct sigaction sa;
+	memset(&sa, 0, sizeof(struct sigaction));
+	sa.sa_handler = handler;
 
-    sigaction(SIGTERM, &sa, NULL);
-    sigaction(SIGINT, &sa, NULL);
-    sigaction(SIGKILL, &sa, NULL);
-
-    pid_t proc = fork();
-
-    int stat = -1;
+	sigaction(SIGTERM, &sa, NULL);
+	sigaction(SIGINT, &sa, NULL);
+	//sigaction(SIGKILL, &sa, NULL);
 
 
-    switch (proc)
-    {
-        case -1:
-            free(args_list);
-            free(argv);
-            exit(errno);
-        case 0:
+	
+	pid_t proc = fork();
 
-            redirect(fdin,STDIN_FILENO); /*REDIR*/
-            redirect(fdout,STDOUT_FILENO);
-            redirect(fderr, STDERR_FILENO);
+	int stat = -1;
 
-            child_pid = getpid();
 
-            int status = execvp(argv[0], args_list);
-            if (status == -1)
-            {
-                print_err(argv[0], "command not found");
-                free(args_list);
-                free(argv);
-                exit(errno);
-            }
-        default:
-            waitpid(child_pid, &stat, 0);
-            wait(NULL);
-            free(args_list);
-            free(argv);
-            return WEXITSTATUS(stat);
-    }
+	switch (proc)
+	{
+		case -1:
+			free(args_list);
+			free(argv);
+			exit(errno);
+		case 0:
+			if(n_pipes > 0){			
+				// Rediriger la sortie standard vers l'extrémité d'écriture du tuyau
+				redirect(fdpipe[1], STDOUT_FILENO);
+				// Fermer les descripteurs de fichiers du tuyau
+				close(fdpipe[0]);
+				//close(fdpipe[1]);
+
+			}else{
+				redirect(*fdin,STDIN_FILENO); /*REDIR*/
+				redirect(*fdout,STDOUT_FILENO);
+				redirect(*fderr, STDERR_FILENO);
+			}
+
+			child_pid = getpid();
+
+			int status = execvp(argv[0], args_list);
+			if (status == -1)
+			{
+				print_err(argv[0], "command not found");
+				free(args_list);
+				free(argv);
+				exit(errno);
+			}
+		default:
+			waitpid(child_pid, &stat, 0);
+			wait(NULL);
+			if(n_pipes > 0 ){
+				//redirect(fdpipe[0], STDOUT_FILENO);
+				close(fdpipe[0]);
+				close(fdpipe[1]);
+			}
+		free(args_list);
+		free(argv);
+		return WEXITSTATUS(stat);
+	}
 }
+
+
+

@@ -6,7 +6,9 @@
 #include "token.h"
 #include "slasherr.h"
 
+extern int n_cmds;
 extern int n_pipes;
+
 /*
 TODO : Pour le jalon 2 : tester que l'élément avant n'est pas un | pcq sinon le token serait une commande
 */
@@ -116,6 +118,7 @@ struct tokenList *lex (char *input, tokenList *tokList){
 	}
 	
 	makeToken(tokList, tokenStr, CMD, NO_REDIR);
+	char * lastTokStr = tokenStr;
 	tokenStr = strtok (NULL, delimiters);
 	
 	while (tokenStr != NULL ) 
@@ -131,12 +134,18 @@ struct tokenList *lex (char *input, tokenList *tokList){
 				val_ret = lex_three(tokenStr,tokList);
 				break;
 			default: 
-				val_ret = makeToken(tokList,tokenStr,ARG, NO_REDIR);
-				break;
+				if(!strcmp(lastTokStr, "!")){
+					val_ret = makeToken(tokList,tokenStr,CMD, NO_REDIR);
+					n_cmds ++;
+				}else{
+					val_ret = makeToken(tokList,tokenStr,ARG, NO_REDIR);
+				}
+					break;
 		}
 		if(val_ret == 0 ){
 			return NULL;
 		}
+		lastTokStr = tokenStr;
 		tokenStr = strtok (NULL, delimiters);
 	}
 	free(tmp);	

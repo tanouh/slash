@@ -4,10 +4,17 @@
 
 typedef struct cmdFun{
     char *cmdName;
-    int (*fun)(int, int, int, int, char**);
+    int (*fun)(int*, int*, int*, int, char**);
 }cmdFun;
 
-int parserAux(struct tokenList **tokList, struct tokenList **fullTokList, int len, int * fdin, int * fdout, int * fderr);
+typedef struct command {
+	char ** argv ; 
+	int len;
+	int *fdin;
+	int *fdout;
+	int *fderr;
+	struct command * next;
+} command; /*Stocke chaque commande et ses arguments*/
 
 int parser(struct tokenList *tokList, char **argCmd) ;
 
