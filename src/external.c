@@ -72,7 +72,7 @@ int exec_external(int *fdin, int *fdout, int *fderr, int argc, char **argv)
 
 	sigaction(SIGTERM, &sa, NULL);
 	sigaction(SIGINT, &sa, NULL);
-	//sigaction(SIGKILL, &sa, NULL);
+	sigaction(SIGKILL, &sa, NULL);
 
 
 	
