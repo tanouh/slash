@@ -10,6 +10,6 @@ char **formate_args(int argc, char **argv);
 /**
  * Exécute les commandes externes
  */
-int exec_external(int fdin, int fdout,int fderr, int argc, char **argv);
+int exec_external(int *fdin, int *fdout,int *fderr, int argc, char **argv);
 
 #endif

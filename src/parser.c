@@ -220,13 +220,12 @@ int parser(struct tokenList *tokList, char **argCmd){
                 if (current->next == NULL || current->next->type == PIPE) {
 
 			tmp = current;
-			if(current->next && current->next->type == PIPE){ /*PIPES*/
-				current = current->next->next;
-			}else{
-				current = current->next;
-			}
-                        while(partial->first != NULL)
+                        current = current->next;
+
+                        while ((partial->first) != NULL && partial->first != partial->last) {
                                 freeToken(partial, partial->first);
+                        }
+                        freeToken(partial, partial->last);
 
                         partial->first = startCmd;
                         partial->last = tmp;

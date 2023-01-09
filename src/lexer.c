@@ -8,6 +8,7 @@
 
 extern int n_cmds;
 extern int n_pipes;
+char *lastTokStr;
 
 
 int lex_one(char *value, tokenList *tokList) /*PIPES*/
@@ -26,7 +27,10 @@ int lex_one(char *value, tokenList *tokList) /*PIPES*/
                         n_pipes++;
                         break;
                 default :
-                        type = ARG;
+                        if (!strcmp(lastTokStr, "|"))
+                                type = CMD;
+                        else
+                                type = ARG;
                         break;
         }
         return makeToken(tokList, value, type, redir_type);
@@ -111,27 +115,10 @@ struct tokenList *lex(char *input, tokenList *tokList) {
         }
 
         makeToken(tokList, tokenStr, CMD, NO_REDIR);
+        lastTokStr = tokenStr;
         tokenStr = strtok(NULL, delimiters);
 
-	if (tmp == NULL)
-	{
-		print_err(NULL,  MALLOC_ERR); 
-		return NULL;
-	}
-	
-	strcpy(tmp, input);
-	char *tokenStr = strtok(tmp, delimiters);
-	
-	if (tokenStr == NULL) 
-	{
-		return NULL;
-	}
-	
-	makeToken(tokList, tokenStr, CMD, NO_REDIR);
-	char * lastTokStr = tokenStr;
-	tokenStr = strtok (NULL, delimiters);
-	
-	while (tokenStr != NULL ) 
+	while (tokenStr != NULL )
 	{
 		switch(strlen(tokenStr)){
 			case 1:
@@ -143,8 +130,8 @@ struct tokenList *lex(char *input, tokenList *tokList) {
 			case 3:
 				val_ret = lex_three(tokenStr,tokList);
 				break;
-			default: 
-				if(!strcmp(lastTokStr, "!")){
+			default:
+				if(!strcmp(lastTokStr, "|")){
 					val_ret = makeToken(tokList,tokenStr,CMD, NO_REDIR);
 					n_cmds ++;
 				}else{
@@ -153,11 +140,12 @@ struct tokenList *lex(char *input, tokenList *tokList) {
 					break;
 		}
 		if(val_ret == 0 ){
+                        free(tmp);
 			return NULL;
 		}
 		lastTokStr = tokenStr;
 		tokenStr = strtok (NULL, delimiters);
 	}
-	free(tmp);	
+	free(tmp);
 	return tokList;
 }
