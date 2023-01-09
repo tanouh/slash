@@ -16,42 +16,51 @@ extern int fdpipe[2];
 pid_t child_pid;
 
 
-char **formate_args(int argc, char **argv)
-{
-    char **arg_list = malloc((argc + 1) * sizeof(char *));
-    if (arg_list == NULL){
-        print_err(NULL, MALLOC_ERR);
-        return NULL;
-    }
-    for (int i = 0; i < argc; i++)
-    {
-        arg_list[i] = argv[i];
-    }
-    arg_list[argc] = NULL;
-    return arg_list;
+char **formate_args(int argc, char **argv) {
+        char **arg_list = malloc((argc + 1) * sizeof(char *));
+        if (arg_list == NULL) {
+                print_err(NULL, MALLOC_ERR);
+                return NULL;
+        }
+        for (int i = 0; i < argc; i++) {
+                arg_list[i] = argv[i];
+        }
+        arg_list[argc] = NULL;
+        return arg_list;
 }
-
-
+/**
+ *  We kill the child process with the signal seded
+ * @param sig signal send
+ */
 
 void handler(int sig) {
 
-    if (getpid() == child_pid) {
+        if (getpid() == child_pid) {
         // we are in the child process, so kill the child process
-        switch (sig) {
-            case SIGINT:
-                kill(child_pid, SIGINT);
-                break; //sinon pid stocker
-            case SIGTERM:
-                kill(child_pid, SIGTERM);
-                break;
-            case SIGKILL:
-                kill(child_pid, SIGKILL);
-                break;
+                switch (sig) {
+                        case SIGINT:
+                                kill(child_pid, SIGINT);
+                                break; //sinon pid stocker
+                        case SIGTERM:
+                                kill(child_pid, SIGTERM);
+                                break;
+                        case SIGKILL:
+                                kill(child_pid, SIGKILL);
+                                break;
+                }
         }
-    }
 
 }
 
+/**
+ * Execute the procesus (slash + command(recouvrement d'un enfant de slash))
+ * @param fdin
+ * @param fdout
+ * @param fderr
+ * @param argc
+ * @param argv
+ * @return
+ */
 int exec_external(int *fdin, int *fdout, int *fderr, int argc, char **argv)
 { 
 	if (argc < 0)

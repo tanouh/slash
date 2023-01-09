@@ -6,6 +6,8 @@
 #define PWD_ERR "Couldn't "
 
 
-void print_err(char * cmd , char * err_msg);
+void print_err(char *cmd, char *err_msg);
+
 void print_err_fd(int fderr, char *cmd, char *err_msg);
+
 #endif

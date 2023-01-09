@@ -5,11 +5,11 @@
 /**
  * Modifie l'array des arguments de sorte que le dernier élément soit NULL 
  */
-char ** formate_args(int argc, char ** argv);
+char **formate_args(int argc, char **argv);
+
 /**
  * Exécute les commandes externes
  */
-int exec_external(int *fdin, int *fdout,int *fderr, int argc, char **argv);
-int exec_multiple( struct tokenList ** commandsList, int len, int *fdin, int *fdout, int *fderr);
+int exec_external(int fdin, int fdout,int fderr, int argc, char **argv);
 
 #endif

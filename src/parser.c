@@ -22,9 +22,9 @@ int fdpipe[2];
 
 
 static struct cmdFun tabFun[] = {
-        { "cd", exec_cd },
-        { "pwd", exec_pwd },
-        { "exit", exec_exit },
+        {"cd",   exec_cd},
+        {"pwd",  exec_pwd},
+        {"exit", exec_exit},
 };
 
 command * makeCommand(char ** argv, int len, int *fdin, int *fdout, int *fderr){
@@ -87,13 +87,13 @@ command * parserRedir(struct tokenList **tokList, int len, int *fdin, int *fdout
 	token *current = (*tokList)->first;
 	//if(current -> type != REDIRECT)
         argv[0] = current->name;
-	int k =1;
-        for (int i = 1; i < len; i++){
-		/* Ne pas mettre les redirections dans argv */ 
-		current = current->next;
-		if(current->type == REDIRECT) break;
-		argv[i] = current->name; 
-		k++;   
+        int k = 1;
+        for (int i = 1; i < len; i++) {
+                /* Ne pas mettre les redirections dans argv */
+                current = current->next;
+                if (current->type == REDIRECT) break;
+                argv[i] = current->name;
+                k++;
         }
 	
 	int ret_val = compute_redirection(fdin,fdout, fderr, tokList);
@@ -114,22 +114,22 @@ command * parserAux(struct tokenList **tokList, struct tokenList **fullTokList, 
         token *current = (*tokList)->first;
 
         argv[0] = current->name;
-        for (int i = 1; i < len; i++){
-		current = current->next;
-		argv[i] = current->name; 
+        for (int i = 1; i < len; i++) {
+                current = current->next;
+                argv[i] = current->name;
         }
 
         int ret_val;
         int cpt;
         current = (*tokList)->first;
-        for (int i = 0; i < len; i++){ // Parcours des arguments 
+        for (int i = 0; i < len; i++) { // Parcours des arguments
                 cpt = 0;
-		if (!argv[i]) continue;
-		for (int j = 0; j < strlen(argv[i]); j++){ // Parcours d'un argument
-			if (argv[i][j] == '*'){
+                if (!argv[i]) continue;
+                for (int j = 0; j < strlen(argv[i]); j++) { // Parcours d'un argument
+                        if (argv[i][j] == '*') {
 
                                 if (cpt++ < current->nbEtoileNom) continue;
-                                if (j+1 < strlen(argv[i]) && argv[i][j+1] == '*')
+                                if (j + 1 < strlen(argv[i]) && argv[i][j + 1] == '*')
                                         ret_val = expand_double(argv, tokList, i, &len, current->type);
                                 else
                                         ret_val = expand_path(argv, tokList, i, &len, current->type);
@@ -179,8 +179,8 @@ command * parserAux(struct tokenList **tokList, struct tokenList **fullTokList, 
 				else return NULL;
                         }
                 }
-		
-		if (i != -1) current = current->next;
+
+                if (i != -1) current = current->next;
         }
 	return parserRedir(tokList, len,fdin, fdout,fderr,argv);
 }
@@ -227,8 +227,8 @@ int parser(struct tokenList *tokList, char **argCmd){
 			}
                         while(partial->first != NULL)
                                 freeToken(partial, partial->first);
-                        
-			partial->first = startCmd;
+
+                        partial->first = startCmd;
                         partial->last = tmp;
 
 			char **argv = calloc(len,sizeof(char *));

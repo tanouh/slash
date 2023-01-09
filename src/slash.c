@@ -17,6 +17,8 @@
 #define SIZE_PROMPT 30
 #define SIZE_VALRET 3
 #define SIZE_COLOR 16
+#define RET_VAL_SIG 255
+
 
 #define GREEN "\001\033[32m\002"
 #define RED "\001\033[91m\002"
@@ -25,7 +27,7 @@
 #define BASIC "\001\033[00m\002"
 
 int ret_val;
-char * prompt;
+char *prompt;
 struct tokenList *toklist;
 char *lastWd; // last working directory
 int n_pipes;
@@ -45,42 +47,42 @@ char *initialize_prompt(int valret) {
                 return NULL;
         }
         char *pwd = getenv("PWD");
-        if (valret == 255){
-            if (strlen(pwd) + (SIZE_VALRET + 1) < SIZE_PROMPT) {
-                sprintf(string, "%s[%s]%s%s%s$ ", valret_color, "SIG", CYAN, pwd, BASIC);
-            } else {
-                char *reduction = pwd + strlen(pwd) + 8 - SIZE_PROMPT;
-                sprintf(string, "%s[%s]%s%s%s%s$ ", valret_color, "SIG", CYAN, "...", reduction, BASIC);
-            }
-            return string;
+        if (valret == RET_VAL_SIG) {
+                if (strlen(pwd) + (SIZE_VALRET + 1) < SIZE_PROMPT) {
+                        sprintf(string, "%s[%s]%s%s%s$ ", valret_color, "SIG", CYAN, pwd, BASIC);
+                } else {
+                        char *reduction;
+                        reduction = pwd + strlen(pwd) + 10 - SIZE_PROMPT;
+                        sprintf(string, "%s[%s]%s%s%s%s$ ", valret_color, "SIG", CYAN, "...", reduction, BASIC);
+                }
+                return string;
         }
         if (strlen(pwd) + (SIZE_VALRET + 1) < SIZE_PROMPT) {
                 sprintf(string, "%s[%d]%s%s%s$ ", valret_color, valret, CYAN, pwd, BASIC);
         } else {
-            char *reduction = pwd + strlen(pwd) + 8 - SIZE_PROMPT;
-            sprintf(string, "%s[%d]%s%s%s%s$ ", valret_color, valret, CYAN, "...", reduction, BASIC);
+                char *reduction = pwd + strlen(pwd) + 8 - SIZE_PROMPT;
+                sprintf(string, "%s[%d]%s%s%s%s$ ", valret_color, valret, CYAN, "...", reduction, BASIC);
         }
 
-    return string;
+        return string;
 }
-
 
 
 int main() {
         rl_outstream = stderr;
-	
-	ret_val = 0;
+
+        ret_val = 0;
         prompt = initialize_prompt(ret_val);
-	toklist = makeTokenList();
-	lastWd = malloc(MAX_ARGS_STRLEN); 
-	if(lastWd == NULL){
-		print_err(NULL, MALLOC_ERR);
-		exit(1);
-	}
-	memset(lastWd, 0x0, MAX_ARGS_STRLEN);
-	memmove(lastWd, getenv("PWD"), strlen(getenv("PWD")));
-	
-	char *buffer;
+        toklist = makeTokenList();
+        lastWd = malloc(MAX_ARGS_STRLEN);
+        if (lastWd == NULL) {
+                print_err(NULL, MALLOC_ERR);
+                exit(1);
+        }
+        memset(lastWd, 0x0, MAX_ARGS_STRLEN);
+        memmove(lastWd, getenv("PWD"), strlen(getenv("PWD")));
+
+        char *buffer;
         char **argCmd;
 
         int lenTokList;
@@ -98,38 +100,38 @@ int main() {
                 if (!strcmp(buffer, "")) continue;
                 add_history(buffer);
                 free(prompt);
-		
-		toklist = lex(buffer, toklist); 
- 
-		free(buffer);
+
+                toklist = lex(buffer, toklist);
+
+                free(buffer);
 
                 current = toklist->first;
-                while(current != NULL){
+                while (current != NULL) {
                         lenTokList++;
                         current = current->next;
                 }
-                argCmd = malloc((lenTokList+1)*sizeof(char *));
-                if (argCmd == NULL){
+                argCmd = malloc((lenTokList + 1) * sizeof(char *));
+                if (argCmd == NULL) {
                         print_err(NULL, MALLOC_ERR);
                         break;
                 }
 
                 ret_val = parser(toklist, argCmd); /*PIPES*/
-                
-		free(argCmd);
+
+                free(argCmd);
                 prompt = initialize_prompt(ret_val);
                 current = NULL;
 
-		n_pipes = 0 ; /*PIPES*/
+                n_pipes = 0; /*PIPES*/
         }
         free(buffer);
-        rl_clear_history(); // à voir si ça ne pose pas problème
+        rl_clear_history();
         free(prompt);
         if (toklist->first != NULL)
                 clearTokenList(toklist);
         free(toklist);
-	free(lastWd);
+        free(lastWd);
 
-	write(STDERR_FILENO,"\n",1);
-	exit(ret_val);
+        write(STDERR_FILENO, "\n", 1);
+        exit(ret_val);
 }
